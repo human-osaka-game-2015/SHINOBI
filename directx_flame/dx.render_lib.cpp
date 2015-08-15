@@ -1,5 +1,6 @@
 #include "dx.render_lib.h"
 #include <d3dx9math.h>
+
 IDirect3DDevice9*	pD3Device;		//	Direct3Dのデバイス
 
 D3DPRESENT_PARAMETERS d3dpp;		//	パラメーター
@@ -102,6 +103,122 @@ HRESULT Tex_Load_EX(LPDIRECT3DTEXTURE9 *pTexture,const char* text, int TexID, in
 		&pTexture[TexID]);
 }
 
+void Mesh_Load_FromX(LPTSTR xfilename, pTHING pThing, D3DXVECTOR3* pvecPosition)
+{
+	LPD3DXBUFFER	pMatBuf = NULL;
+
+	if (FAILED(D3DXLoadMeshFromX(
+		xfilename,				// xファイルのファイルパス
+		D3DXMESH_MANAGED,	// 頂点バッファ作成オプション
+		pD3Device,				// Direct3DDeviceポインタ
+		NULL,				// 隣接性データポリゴン情報 使わない
+		&pMatBuf,			// マテリアル情報
+		NULL,				// エフェクト 使わない
+		&pThing->nMat,				// メッシュの数取得
+		&pThing->pMesh			// メッシュ情報のポインタ
+		)))
+	{
+		MessageBox(NULL, "xファイルの読み込みに失敗しました", xfilename, MB_OK);
+	}
+
+	if (!(pThing->pMesh->GetFVF() & D3DFVF_NORMAL)) {
+
+		ID3DXMesh* pTempMesh = NULL;
+
+		pThing->pMesh->CloneMeshFVF(pThing->pMesh->GetOptions(),
+			pThing->pMesh->GetFVF() | D3DFVF_NORMAL, pD3Device, &pTempMesh);
+
+		D3DXComputeNormals(pTempMesh, NULL);
+		pThing->pMesh->Release();
+		pThing->pMesh = pTempMesh;
+	}
+
+	// マテリアル情報を取り出す
+	D3DXMATERIAL*	d3Mat = (D3DXMATERIAL*)pMatBuf->GetBufferPointer();
+	pThing->pMeshMat = new D3DMATERIAL9[pThing->nMat];		// メッシュ情報を確保
+	pThing->pMeshTex = new LPDIRECT3DTEXTURE9[pThing->nMat];// テクスチャを確保
+	for (int i = 0; i < pThing->nMat; i++)
+	{
+		pThing->pMeshMat[i] = d3Mat[i].MatD3D;			// マテリアル情報セット
+		pThing->pMeshMat[i].Ambient = pThing->pMeshMat[i].Diffuse;// 環境光初期化
+		pThing->pMeshTex[i] = NULL;	// テクスチャ初期化
+
+		// 使用しているテクスチャがあれば読み込む
+		if (d3Mat[i].pTextureFilename != NULL &&
+			lstrlen(d3Mat[i].pTextureFilename) > 0)
+		{
+			// テクスチャ読み込み
+			if(FAILED(D3DXCreateTextureFromFile(
+				pD3Device,
+				d3Mat[i].pTextureFilename,
+				&pThing->pMeshTex[i])))
+			{
+				MessageBox(NULL, "テクスチャの読み込みに失敗しました", NULL, MB_OK);
+			}
+		}
+	}
+	// マテリアル情報開放
+	pMatBuf->Release();
+
+
+
+}
+
+void Set_Transform(THING* pThing)
+{
+	//ワールドトランスフォーム（絶対座標変換）
+	D3DXMATRIXA16 matWorld, matPosition;
+	D3DXMatrixIdentity(&matWorld);
+	D3DXMatrixTranslation(&matPosition, pThing->vecPosition.x, pThing->vecPosition.y,
+		pThing->vecPosition.z);
+	D3DXMatrixMultiply(&matWorld, &matWorld, &matPosition);
+	pD3Device->SetTransform(D3DTS_WORLD, &matWorld);
+}
+
+
+void Set_View_Light(FLOAT Eye_x, FLOAT Eye_y, FLOAT Eye_z)
+{
+	// ビュートランスフォーム（視点座標変換）
+
+	D3DXVECTOR3 vecEyePt(Eye_x, Eye_y, Eye_z); //カメラ（視点）位置
+	D3DXVECTOR3 vecLookatPt(0.0f, 0.0f, 0.0f);//注視位置
+	D3DXVECTOR3 vecUpVec(0.0f, 1.0f, 0.0f);//上方位置
+	D3DXMATRIXA16 matView;
+	D3DXMatrixLookAtLH(&matView, &vecEyePt, &vecLookatPt, &vecUpVec);
+	pD3Device->SetTransform(D3DTS_VIEW, &matView);
+	// プロジェクショントランスフォーム（射影変換）
+	D3DXMATRIXA16 matProj;
+	D3DXMatrixPerspectiveFovLH(&matProj, D3DX_PI / 4, 1.0f, 1.0f, 100.0f);
+	pD3Device->SetTransform(D3DTS_PROJECTION, &matProj);
+	// ライトをあてる 白色で鏡面反射ありに設定
+	D3DXVECTOR3 vecDirection(1, 1, 1);
+	D3DLIGHT9 light;
+	ZeroMemory(&light, sizeof(D3DLIGHT9));
+	light.Type = D3DLIGHT_DIRECTIONAL;
+	light.Diffuse.r = 1.0f;
+	light.Diffuse.g = 1.0f;
+	light.Diffuse.b = 1.0f;
+	light.Specular.r = 1.0f;
+	light.Specular.g = 1.0f;
+	light.Specular.b = 1.0f;
+	D3DXVec3Normalize((D3DXVECTOR3*)&light.Direction, &vecDirection);
+	light.Range = 200.0f;
+	pD3Device->SetLight(0, &light);
+	pD3Device->LightEnable(0, TRUE);
+
+}
+
+void Draw_Thing(THING* pThing)
+{
+	// レンダリング	 
+	for (DWORD i = 0; i<pThing->nMat; i++)
+	{
+		pD3Device->SetMaterial(&pThing->pMeshMat[i]);
+		pD3Device->SetTexture(0, pThing->pMeshTex[i]);
+		pThing->pMesh->DrawSubset(i);
+	}
+
+}
 
 HRESULT Tex_Load(LPDIRECT3DTEXTURE9 *pTexture, const char* name, int TexID)
 {

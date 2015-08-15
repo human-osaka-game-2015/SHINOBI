@@ -2,12 +2,13 @@
 #include <mmsystem.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <d3dx9.h>
 
 #include "dx.render_lib.h"
 #include "dinput_lib.h"
 #include "directx_lib.h"
 #include "d_sound.h"
-#include "Header.h"
+
 #define TITLE 	TEXT("SHINOBI")
 
 enum STAGE
@@ -36,14 +37,11 @@ bool next_scene = false;
 
 int stage_num = STAGE1;
 
-LPD3DXMESH			pMesh[5];	// メッシュデータ
+LPD3DXMESH			pMesh;	// メッシュデータ
 DWORD				nMat;	// マテリアルの数
 D3DMATERIAL9*			pMeshMat;	// マテリアル情報
 LPDIRECT3DTEXTURE9*	pMeshTex;	// メッシュのテクスチャ
 
-FLOAT fYaw = 0, fPitch = 0, fRoll = 0;
-FLOAT fPosX = 0, fPosY = 0, fPosZ = 0;
-FLOAT fScale = 1.0f;
 
 
 enum TEXTURE
@@ -133,6 +131,7 @@ CUSTOMVERTEX maki_right[] =
 
 LPDIRECT3DTEXTURE9 pTexture[TEXMAX];	//	画像の情報を入れておく為のポインタ配列
 
+THING tomato;
 //int PreKey[KEYMAX] = { 0 };
 //
 //int KeyState[4] = { 0 };
@@ -219,35 +218,17 @@ HRESULT Control(void)
 			current_scene = SELECT_SCENE;
 		}
 
-		if (Key[P] == ON)
-		{
-			fPosZ += 0.5f;
-		}
-
-		if (Key[O] == ON)
-		{
-			fPosZ -= 0.5f;
-		}
 
 		if (Key[RIGHT] == ON)
 		{
-			fPosX += 0.01f;
+			tomato.vecPosition.x += 0.01f;
 		}
 
 		if (Key[LEFT] == ON)
 		{
-			fPosX -= 0.01f;
+			tomato.vecPosition.x -= 0.01f;
 		}
 
-		if (Key[UP] == ON)
-		{
-			fPosY += 0.01f;
-		}
-
-		if (Key[DOWN] == ON)
-		{
-			fPosY -= 0.01f;
-		}
 
 
 
@@ -280,54 +261,58 @@ void Render(void)
 	pD3Device->SetRenderState(D3DRS_AMBIENT, 0x00111111);
 	// スペキュラ（鏡面反射）を有効にする
 	pD3Device->SetRenderState(D3DRS_SPECULARENABLE, TRUE);
-
+	
 	//ワールドトランスフォーム（絶対座標変換）
-	D3DXMATRIXA16 matWorld, matPosition, matRotation, matRotation2,matScale;
-	D3DXMatrixIdentity(&matWorld);
-	D3DXMatrixIdentity(&matRotation);
+	Set_Transform(&tomato);
 
-	D3DXMatrixScaling(&matScale, fScale, fScale, fScale);
-	D3DXMatrixTranslation(&matPosition, fPosX, fPosY, fPosZ);
+	////ワールドトランスフォーム（絶対座標変換）
+	//D3DXMATRIXA16 matWorld, matPosition, matRotation, matRotation2,matScale;
+	//D3DXMatrixIdentity(&matWorld);
+	//D3DXMatrixIdentity(&matRotation);
+
+	//D3DXMatrixScaling(&matScale, fScale, fScale, fScale);
+	//D3DXMatrixTranslation(&matPosition, fPosX, fPosY, fPosZ);
 	//D3DXMatrixRotationX(&matRotation2, fPitch);
 	//D3DXMatrixMultiply(&matRotation, &matRotation, &matRotation2);
 	//D3DXMatrixRotationY(&matRotation2, fYaw);
 	//D3DXMatrixMultiply(&matRotation, &matRotation, &matRotation2);
 	//D3DXMatrixRotationZ(&matRotation2, fRoll);
 	//D3DXMatrixMultiply(&matRotation, &matRotation, &matRotation2);
-	D3DXMatrixMultiply(&matWorld, &matWorld, &matPosition);
+	//D3DXMatrixMultiply(&matWorld, &matWorld, &matPosition);
 	//D3DXMatrixMultiply(&matRotation, &matRotation, &matRotation2);
 	//D3DXMatrixMultiply(&matWorld, &matWorld, &matRotation);
-	D3DXMatrixMultiply(&matWorld, &matWorld, &matScale);
+	//D3DXMatrixMultiply(&matWorld, &matWorld, &matScale);
 
 
-	pD3Device->SetTransform(D3DTS_WORLD, &matWorld);
-	// ビュートランスフォーム（視点座標変換）
+	//pD3Device->SetTransform(D3DTS_WORLD, &matWorld);
+	//// ビュートランスフォーム（視点座標変換）
+	Set_View_Light(0.0f,1.0f,-3.0f);
 
-	D3DXVECTOR3 vecEyePt(0.0f, 1.0f, -10.0f); //カメラ（視点）位置
-	D3DXVECTOR3 vecLookatPt(0.0f, 0.0f, 0.0f);//注視位置
-	D3DXVECTOR3 vecUpVec(0.0f, 1.0f, 0.0f);//上方位置
-	D3DXMATRIXA16 matView;
-	D3DXMatrixLookAtLH(&matView, &vecEyePt, &vecLookatPt, &vecUpVec);
-	pD3Device->SetTransform(D3DTS_VIEW, &matView);
-	// プロジェクショントランスフォーム（射影変換）
-	D3DXMATRIXA16 matProj;
-	D3DXMatrixPerspectiveFovLH(&matProj, D3DX_PI / 4, 1.0f, 1.0f, 100.0f);
-	pD3Device->SetTransform(D3DTS_PROJECTION, &matProj);
-	// ライトをあてる 白色ライト、鏡面反射有りに設定
-	D3DXVECTOR3 vecDirection(1, 1, 1);
-	D3DLIGHT9 light;
-	ZeroMemory(&light, sizeof(D3DLIGHT9));
-	light.Type = D3DLIGHT_DIRECTIONAL;
-	light.Diffuse.r = 1.0f;
-	light.Diffuse.g = 1.0f;
-	light.Diffuse.b = 1.0f;
-	light.Specular.r = 1.0f;
-	light.Specular.g = 1.0f;
-	light.Specular.b = 1.0f;
-	D3DXVec3Normalize((D3DXVECTOR3*)&light.Direction, &vecDirection);
-	light.Range = 500.0f;
-	pD3Device->SetLight(0, &light);
-	pD3Device->LightEnable(0, TRUE);
+	//D3DXVECTOR3 vecEyePt(0.0f, 1.0f, -10.0f); //カメラ（視点）位置
+	//D3DXVECTOR3 vecLookatPt(0.0f, 0.0f, 0.0f);//注視位置
+	//D3DXVECTOR3 vecUpVec(0.0f, 1.0f, 0.0f);//上方位置
+	//D3DXMATRIXA16 matView;
+	//D3DXMatrixLookAtLH(&matView, &vecEyePt, &vecLookatPt, &vecUpVec);
+	//pD3Device->SetTransform(D3DTS_VIEW, &matView);
+	//// プロジェクショントランスフォーム（射影変換）
+	//D3DXMATRIXA16 matProj;
+	//D3DXMatrixPerspectiveFovLH(&matProj, D3DX_PI / 4, 1.0f, 1.0f, 100.0f);
+	//pD3Device->SetTransform(D3DTS_PROJECTION, &matProj);
+	//// ライトをあてる 白色ライト、鏡面反射有りに設定
+	//D3DXVECTOR3 vecDirection(1, 1, 1);
+	//D3DLIGHT9 light;
+	//ZeroMemory(&light, sizeof(D3DLIGHT9));
+	//light.Type = D3DLIGHT_DIRECTIONAL;
+	//light.Diffuse.r = 1.0f;
+	//light.Diffuse.g = 1.0f;
+	//light.Diffuse.b = 1.0f;
+	//light.Specular.r = 1.0f;
+	//light.Specular.g = 1.0f;
+	//light.Specular.b = 1.0f;
+	//D3DXVec3Normalize((D3DXVECTOR3*)&light.Direction, &vecDirection);
+	//light.Range = 500.0f;
+	//pD3Device->SetLight(0, &light);
+	//pD3Device->LightEnable(0, TRUE);
 
 	//画面の消去と描画の開始
 	switch (current_scene)
@@ -430,13 +415,14 @@ void Render(void)
 
 					Tex_Draw(pTexture, back_ground, STAGE2_TEX);
 
+					Draw_Thing(&tomato);
 
-					for (int i = 0; i < nMat; i++)
-					{
-						pD3Device->SetMaterial(&pMeshMat[i]);	// マテリアル情報をセット
-						pD3Device->SetTexture(0, pMeshTex[i]);	// テクスチャ情報をセット
-						pMesh[0]->DrawSubset(i);				// メッシュを描画
-					}
+					//for (int i = 0; i < nMat; i++)
+					//{
+					//	pD3Device->SetMaterial(&pMeshMat[i]);	// マテリアル情報をセット
+					//	pD3Device->SetTexture(0, pMeshTex[i]);	// テクスチャ情報をセット
+					//	pMesh->DrawSubset(i);				// メッシュを描画
+					//}
 
 					EndScene();
 					break;
@@ -495,10 +481,7 @@ VOID FreeDx()
 	}
 	SAFE_RELEASE(pD3Device);
 	SAFE_RELEASE(pDirect3D);
-	for (size_t i = 0; i < 5; i++)
-	{
-		SAFE_RELEASE(pMesh[i]);
-	}
+		SAFE_RELEASE(pMesh);
 
 
 }
@@ -564,71 +547,73 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	D3DCreate();
 
-	LPD3DXBUFFER	pMatBuf = NULL;
 	Tex_Load_EX(pTexture, "makimoo.png", MAKI_LEFT_TEX, 255, 255, 255, 255);
 	Tex_Load_EX(pTexture, "makikami.png", MAKI_MID_TEX, 255, 255, 255, 255);
 	Tex_Load_EX(pTexture, "maki3.png", MAKI_RIGHT_TEX, 255, 255, 255, 255);
 	Tex_Load(pTexture, "white.bmp", WHITE_TEX);
 	Tex_Load(pTexture, "titlerogo2_cg3.jpg", TITLE_TEX);
-	Tex_Load(pTexture, "teamlogo.bmp", TEAM_LOGO_TEX);
+	Tex_Load(pTexture, "team_rogo_y.png", TEAM_LOGO_TEX);
 	Tex_Load(pTexture, "stage1.bmp", STAGE1_TEX);
 	Tex_Load(pTexture, "stage2.bmp", STAGE2_TEX);
 	Tex_Load(pTexture, "stage3.bmp", STAGE3_TEX);
 
+	LPD3DXBUFFER	pMatBuf = NULL;
+
+	Mesh_Load_FromX("Tomato.x", &tomato, &D3DXVECTOR3(1, 1, 1));
 
 	// xファイル読み込み
-	if (FAILED(D3DXLoadMeshFromX(
-		"Tomato.x",				// xファイルのファイルパス
-		D3DXMESH_MANAGED,	// 頂点バッファ作成オプション
-		pD3Device,				// Direct3DDeviceポインタ
-		NULL,				// 隣接性データポリゴン情報 使わない
-		&pMatBuf,			// マテリアル情報
-		NULL,				// エフェクト 使わない
-		&nMat,				// メッシュの数取得
-		&pMesh[0]			// メッシュ情報のポインタ
-		)))
-	{
-		return E_FAIL;
-	}
+	//if (FAILED(D3DXLoadMeshFromX(
+	//	"Tomato.x",				// xファイルのファイルパス
+	//	D3DXMESH_MANAGED,	// 頂点バッファ作成オプション
+	//	pD3Device,				// Direct3DDeviceポインタ
+	//	NULL,				// 隣接性データポリゴン情報 使わない
+	//	&pMatBuf,			// マテリアル情報
+	//	NULL,				// エフェクト 使わない
+	//	&nMat,				// メッシュの数取得
+	//	&pMesh			// メッシュ情報のポインタ
+	//	)))
+	//{
+	//	return E_FAIL;
+	//}
 
-	if (!(pMesh[0]->GetFVF() & D3DFVF_NORMAL)) {
+	//if (!(pMesh->GetFVF() & D3DFVF_NORMAL)) {
 
-		ID3DXMesh* pTempMesh = NULL;
+	//	ID3DXMesh* pTempMesh = NULL;
 
-		pMesh[0]->CloneMeshFVF(pMesh[0]->GetOptions(),
-			pMesh[0]->GetFVF() | D3DFVF_NORMAL, GetDevice(), &pTempMesh);
+	//	pMesh->CloneMeshFVF(pMesh->GetOptions(),
+	//		pMesh->GetFVF() | D3DFVF_NORMAL, GetDevice(), &pTempMesh);
 
-		D3DXComputeNormals(pTempMesh, NULL);
-		pMesh[0]->Release();
-		pMesh[0] = pTempMesh;
-	}
+	//	D3DXComputeNormals(pTempMesh, NULL);
+	//	pMesh->Release();
+	//	pMesh = pTempMesh;
+	//}
 
-	// マテリアル情報を取り出す
-	D3DXMATERIAL*	d3Mat = (D3DXMATERIAL*)pMatBuf->GetBufferPointer();
-	pMeshMat = new D3DMATERIAL9[nMat];		// メッシュ情報を確保
-	pMeshTex = new LPDIRECT3DTEXTURE9[nMat];// テクスチャを確保
-	for (int i = 0; i < nMat; i++)
-	{
-		pMeshMat[i] = d3Mat[i].MatD3D;			// マテリアル情報セット
-		pMeshMat[i].Ambient = pMeshMat[i].Diffuse;// 環境光初期化
-		pMeshTex[i] = NULL;	// テクスチャ初期化
+	//// マテリアル情報を取り出す
+	//D3DXMATERIAL*	d3Mat = (D3DXMATERIAL*)pMatBuf->GetBufferPointer();
+	//pMeshMat = new D3DMATERIAL9[nMat];		// メッシュ情報を確保
+	//pMeshTex = new LPDIRECT3DTEXTURE9[nMat];// テクスチャを確保
+	//for (int i = 0; i < nMat; i++)
+	//{
+	//	pMeshMat[i] = d3Mat[i].MatD3D;			// マテリアル情報セット
+	//	pMeshMat[i].Ambient = pMeshMat[i].Diffuse;// 環境光初期化
+	//	pMeshTex[i] = NULL;	// テクスチャ初期化
 
-		// 使用しているテクスチャがあれば読み込む
-		if (d3Mat[i].pTextureFilename != NULL &&
-			lstrlen(d3Mat[i].pTextureFilename) > 0)
-		{
-			// テクスチャ読み込み
-			if (FAILED(D3DXCreateTextureFromFile(
-				pD3Device,
-				d3Mat[i].pTextureFilename,
-				&pMeshTex[i])))
-			{
-				return E_FAIL;
-			}
-		}
-	}
-	// マテリアル情報開放
-	pMatBuf->Release();
+	//	// 使用しているテクスチャがあれば読み込む
+	//	if (d3Mat[i].pTextureFilename != NULL &&
+	//		lstrlen(d3Mat[i].pTextureFilename) > 0)
+	//	{
+	//		// テクスチャ読み込み
+	//		if (FAILED(D3DXCreateTextureFromFile(
+	//			pD3Device,
+	//			d3Mat[i].pTextureFilename,
+	//			&pMeshTex[i])))
+	//		{
+	//			return E_FAIL;
+	//		}
+	//	}
+	//}
+	//// マテリアル情報開放
+	//pMatBuf->Release();
 
 
 	Init();

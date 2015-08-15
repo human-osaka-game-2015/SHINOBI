@@ -78,7 +78,6 @@
     <ClInclude Include="directx_lib.h" />
     <ClInclude Include="dx.render_lib.h" />
     <ClInclude Include="d_sound.h" />
-    <ClInclude Include="Header.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

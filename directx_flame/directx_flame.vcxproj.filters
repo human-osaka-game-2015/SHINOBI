@@ -47,9 +47,6 @@
     <ClInclude Include="dx.render_lib.h">
       <Filter>ヘッダー ファイル\lib</Filter>
     </ClInclude>
-    <ClInclude Include="Header.h">
-      <Filter>ヘッダー ファイル\lib</Filter>
-    </ClInclude>
     <ClInclude Include="d_sound.h">
       <Filter>ヘッダー ファイル\lib</Filter>
     </ClInclude>

@@ -8,17 +8,28 @@
 *@brief 描画関係のライブラリ
 *@author 小谷慶太朗
 */
-
-//-------------------------------------------------------------
-//
-//	描画処理
-//
-//-------------------------------------------------------------
-
-
 extern IDirect3DDevice9*	pD3Device;		//	Direct3Dのデバイス
 
+
+//他のコードから作成されたD3Dデバイスを取得するためのもの
+//LPDIRECT3DDEVICE9 GetDevice()
+//{
+//	return pD3Device;
+//}
+
+
+
 extern D3DPRESENT_PARAMETERS d3dpp;		//	パラメーター
+
+typedef struct _THING
+{
+	LPD3DXMESH			pMesh;	// メッシュデータ
+	DWORD				nMat;	// マテリアルの数
+	D3DMATERIAL9*			pMeshMat;	// マテリアル情報
+	LPDIRECT3DTEXTURE9*	pMeshTex;	// メッシュのテクスチャ
+	D3DXVECTOR3 vecPosition;
+}THING,*pTHING;
+
 
 struct CUSTOMVERTEX
 {
@@ -48,7 +59,7 @@ HRESULT Tex_Load_EX(LPDIRECT3DTEXTURE9 *pTexture,const char* text, int TexID, in
 /**
  * @brief 画像を読み込む関数です。
  *
- * @param pTexture  
+ * @param pTexture
  * @param name 画像の名前
  * @param TexID ptextureの配列の要素数
  *
@@ -97,3 +108,40 @@ void Vertex_Spin(CUSTOMVERTEX* vertex, float spin_speed);
 *@param y y軸の拡縮の比率
 */
 void Vertex_Scaling(CUSTOMVERTEX *vertex, float x, float y);
+
+
+/**
+ * @brief
+ *
+ * @param xfilename xファイルの名前を入れる
+ * @param pThing THING型の構造体を渡す
+ * @param pvecPosition 読み込んだxファイルx,y,zの初期位置を設定する
+ */
+void Mesh_Load_FromX(LPTSTR xfilename, pTHING pThing, D3DXVECTOR3* pvecPosition);
+
+
+/**
+ * @brief ワールド座標に変換する
+ *
+ * @param pThing THING型の構造体のポインタを渡す
+ */
+void Set_Transform(THING* pThing);
+
+
+/**
+ * @brief カメラの座標を設定して、ライトをオンにする
+ *
+ * @param Eye_x カメラのx座標を設定する
+ * @param Eye_y カメラのy座標を設定する
+ * @param Eye_z カメラのz座標を設定する
+ */
+void Set_View_Light(FLOAT Eye_x, FLOAT Eye_y, FLOAT Eye_z);
+
+
+/**
+ * @brief 読み込んだメッシュを表示する
+ *
+ * @param pThing THING型の構造体のポインタを渡す
+ */
+void Draw_Thing(THING* pThing);
+
