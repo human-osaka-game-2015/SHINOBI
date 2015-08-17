@@ -134,10 +134,8 @@ CUSTOMVERTEX maki_right[] =
 
 LPDIRECT3DTEXTURE9 pTexture[TEXMAX];	//	画像の情報を入れておく為のポインタ配列
 
+
 THING thing[2];
-//int PreKey[KEYMAX] = { 0 };
-//
-//int KeyState[4] = { 0 };
 
 
 void Init()
@@ -224,12 +222,12 @@ HRESULT Control(void)
 
 		if (Key[RIGHT] == ON)
 		{
-			thing[0].vecPosition.x += 0.01f;
+			thing[0].vecPosition.x += 0.1f;
 		}
 
 		if (Key[LEFT] == ON)
 		{
-			thing[0].vecPosition.x -= 0.01f;
+			thing[0].vecPosition.x -= 0.1f;
 		}
 
 		if (Key[UP] == ON)
@@ -263,67 +261,8 @@ HRESULT Control(void)
 void Render(void)
 {
 	if (!pD3Device) return;
-	RenderSet();
-	// Zバッファー処理を有効にする
-	pD3Device->SetRenderState(D3DRS_ZENABLE, TRUE);
-	// ライトを有効にする
-	pD3Device->SetRenderState(D3DRS_LIGHTING, TRUE);
-	// アンビエントライト（環境光）を設定する
-	pD3Device->SetRenderState(D3DRS_AMBIENT, 0x00111111);
-	// スペキュラ（鏡面反射）を有効にする
-	pD3Device->SetRenderState(D3DRS_SPECULARENABLE, TRUE);
 	
-	//ワールドトランスフォーム（絶対座標変換）
-	Set_Transform(&thing[0]);
-
-	////ワールドトランスフォーム（絶対座標変換）
-	//D3DXMATRIXA16 matWorld, matPosition, matRotation, matRotation2,matScale;
-	//D3DXMatrixIdentity(&matWorld);
-	//D3DXMatrixIdentity(&matRotation);
-
-	//D3DXMatrixScaling(&matScale, fScale, fScale, fScale);
-	//D3DXMatrixTranslation(&matPosition, fPosX, fPosY, fPosZ);
-	//D3DXMatrixRotationX(&matRotation2, fPitch);
-	//D3DXMatrixMultiply(&matRotation, &matRotation, &matRotation2);
-	//D3DXMatrixRotationY(&matRotation2, fYaw);
-	//D3DXMatrixMultiply(&matRotation, &matRotation, &matRotation2);
-	//D3DXMatrixRotationZ(&matRotation2, fRoll);
-	//D3DXMatrixMultiply(&matRotation, &matRotation, &matRotation2);
-	//D3DXMatrixMultiply(&matWorld, &matWorld, &matPosition);
-	//D3DXMatrixMultiply(&matRotation, &matRotation, &matRotation2);
-	//D3DXMatrixMultiply(&matWorld, &matWorld, &matRotation);
-	//D3DXMatrixMultiply(&matWorld, &matWorld, &matScale);
-
-
-	//pD3Device->SetTransform(D3DTS_WORLD, &matWorld);
-	//// ビュートランスフォーム（視点座標変換）
 	Set_View_Light(eye_x,eye_y,eye_z);
-
-	//D3DXVECTOR3 vecEyePt(0.0f, 1.0f, -10.0f); //カメラ（視点）位置
-	//D3DXVECTOR3 vecLookatPt(0.0f, 0.0f, 0.0f);//注視位置
-	//D3DXVECTOR3 vecUpVec(0.0f, 1.0f, 0.0f);//上方位置
-	//D3DXMATRIXA16 matView;
-	//D3DXMatrixLookAtLH(&matView, &vecEyePt, &vecLookatPt, &vecUpVec);
-	//pD3Device->SetTransform(D3DTS_VIEW, &matView);
-	//// プロジェクショントランスフォーム（射影変換）
-	//D3DXMATRIXA16 matProj;
-	//D3DXMatrixPerspectiveFovLH(&matProj, D3DX_PI / 4, 1.0f, 1.0f, 100.0f);
-	//pD3Device->SetTransform(D3DTS_PROJECTION, &matProj);
-	//// ライトをあてる 白色ライト、鏡面反射有りに設定
-	//D3DXVECTOR3 vecDirection(1, 1, 1);
-	//D3DLIGHT9 light;
-	//ZeroMemory(&light, sizeof(D3DLIGHT9));
-	//light.Type = D3DLIGHT_DIRECTIONAL;
-	//light.Diffuse.r = 1.0f;
-	//light.Diffuse.g = 1.0f;
-	//light.Diffuse.b = 1.0f;
-	//light.Specular.r = 1.0f;
-	//light.Specular.g = 1.0f;
-	//light.Specular.b = 1.0f;
-	//D3DXVec3Normalize((D3DXVECTOR3*)&light.Direction, &vecDirection);
-	//light.Range = 500.0f;
-	//pD3Device->SetLight(0, &light);
-	//pD3Device->LightEnable(0, TRUE);
 
 	//画面の消去と描画の開始
 	switch (current_scene)
@@ -425,16 +364,10 @@ void Render(void)
 					BeginScene();
 
 					Tex_Draw(pTexture, back_ground, STAGE2_TEX);
-
-						Draw_Thing(&thing[0]);
-
 					
-					//for (int i = 0; i < nMat; i++)
-					//{
-					//	pD3Device->SetMaterial(&pMeshMat[i]);	// マテリアル情報をセット
-					//	pD3Device->SetTexture(0, pMeshTex[i]);	// テクスチャ情報をセット
-					//	pMesh->DrawSubset(i);				// メッシュを描画
-					//}
+					Transform_Draw_Thing(&thing[0]);
+					
+					Transform_Draw_Thing(&thing[1]);
 
 					EndScene();
 					break;
@@ -572,6 +505,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	Mesh_Load_FromX("Tomato.x", &thing[0], &D3DXVECTOR3(5.0f, 0.0f, 5.0f));
 	Mesh_Load_FromX("t.x", &thing[1], &D3DXVECTOR3(0.0f, 0.0f, 0.0f));
+
+	RenderSet();
+	// Zバッファー処理を有効にする
+	pD3Device->SetRenderState(D3DRS_ZENABLE, TRUE);
+	// ライトを有効にする
+	pD3Device->SetRenderState(D3DRS_LIGHTING, TRUE);
+	// アンビエントライト（環境光）を設定する
+	pD3Device->SetRenderState(D3DRS_AMBIENT, 0x00111111);
+	// スペキュラ（鏡面反射）を有効にする
+	pD3Device->SetRenderState(D3DRS_SPECULARENABLE, TRUE);
 
 	// xファイル読み込み
 	//if (FAILED(D3DXLoadMeshFromX(

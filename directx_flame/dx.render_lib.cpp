@@ -123,17 +123,17 @@ void Mesh_Load_FromX(LPTSTR xfilename, pTHING pThing, D3DXVECTOR3* pvecPosition)
 		MessageBox(NULL, "xファイルの読み込みに失敗しました", xfilename, MB_OK);
 	}
 
-	if (!(pThing->pMesh->GetFVF() & D3DFVF_NORMAL)) {
+	//if (!(pThing->pMesh->GetFVF() & D3DFVF_NORMAL)) {
 
-		ID3DXMesh* pTempMesh = NULL;
+	//	ID3DXMesh* pTempMesh = NULL;
 
-		pThing->pMesh->CloneMeshFVF(pThing->pMesh->GetOptions(),
-			pThing->pMesh->GetFVF() | D3DFVF_NORMAL, pD3Device, &pTempMesh);
+	//	pThing->pMesh->CloneMeshFVF(pThing->pMesh->GetOptions(),
+	//		pThing->pMesh->GetFVF() | D3DFVF_NORMAL, pD3Device, &pTempMesh);
 
-		D3DXComputeNormals(pTempMesh, NULL);
-		pThing->pMesh->Release();
-		pThing->pMesh = pTempMesh;
-	}
+	//	D3DXComputeNormals(pTempMesh, NULL);
+	//	pThing->pMesh->Release();
+	//	pThing->pMesh = pTempMesh;
+	//}
 
 	// マテリアル情報を取り出す
 	D3DXMATERIAL*	d3Mat = (D3DXMATERIAL*)pMatBuf->GetBufferPointer();
@@ -220,6 +220,12 @@ void Draw_Thing(THING* pThing)
 		pThing->pMesh->DrawSubset(i);
 	}
 
+}
+
+void Transform_Draw_Thing(THING* pThing)
+{
+	Set_Transform(pThing);
+	Draw_Thing(pThing);
 }
 
 HRESULT Tex_Load(LPDIRECT3DTEXTURE9 *pTexture, const char* name, int TexID)

@@ -11,13 +11,6 @@
 extern IDirect3DDevice9*	pD3Device;		//	Direct3Dのデバイス
 
 
-//他のコードから作成されたD3Dデバイスを取得するためのもの
-//LPDIRECT3DDEVICE9 GetDevice()
-//{
-//	return pD3Device;
-//}
-
-
 
 extern D3DPRESENT_PARAMETERS d3dpp;		//	パラメーター
 
@@ -28,6 +21,7 @@ typedef struct _THING
 	D3DMATERIAL9*			pMeshMat;	// マテリアル情報
 	LPDIRECT3DTEXTURE9*	pMeshTex;	// メッシュのテクスチャ
 	D3DXVECTOR3 vecPosition;
+
 }THING,*pTHING;
 
 
@@ -145,3 +139,9 @@ void Set_View_Light(FLOAT Eye_x, FLOAT Eye_y, FLOAT Eye_z);
  */
 void Draw_Thing(THING* pThing);
 
+/**
+* @brief ワールド座標に変換して、読み込んだメッシュを表示する。基本これを使う
+*
+* @param pThing THING型の構造体のポインタを渡す
+*/
+void Transform_Draw_Thing(THING* pThing);
