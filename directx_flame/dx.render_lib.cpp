@@ -105,6 +105,8 @@ HRESULT Tex_Load_EX(LPDIRECT3DTEXTURE9 *pTexture,const char* text, int TexID, in
 
 void Mesh_Load_FromX(LPTSTR xfilename, pTHING pThing, D3DXVECTOR3* pvecPosition)
 {
+	memcpy(&pThing->vecPosition,pvecPosition,sizeof(D3DXVECTOR3));
+
 	LPD3DXBUFFER	pMatBuf = NULL;
 
 	if (FAILED(D3DXLoadMeshFromX(

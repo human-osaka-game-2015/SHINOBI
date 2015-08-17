@@ -37,10 +37,13 @@ bool next_scene = false;
 
 int stage_num = STAGE1;
 
-LPD3DXMESH			pMesh;	// メッシュデータ
-DWORD				nMat;	// マテリアルの数
-D3DMATERIAL9*			pMeshMat;	// マテリアル情報
-LPDIRECT3DTEXTURE9*	pMeshTex;	// メッシュのテクスチャ
+FLOAT eye_x = 0.0f;
+FLOAT eye_y = 0.0f;
+FLOAT eye_z = 0.0f;
+//LPD3DXMESH			pMesh;	// メッシュデータ
+//DWORD				nMat;	// マテリアルの数
+//D3DMATERIAL9*			pMeshMat;	// マテリアル情報
+//LPDIRECT3DTEXTURE9*	pMeshTex;	// メッシュのテクスチャ
 
 
 
@@ -98,10 +101,10 @@ CUSTOMVERTEX back_ground[] =
 
 CUSTOMVERTEX serect_block[] =
 {
-	{ 825.0f, 150.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 0.0f },
-	{ 900.0f, 150.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 0.0f },
-	{ 900.0f, 550.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 1.0f },
-	{ 825.0f, 550.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 1.0f },
+	{ 920.0f, 150.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 0.0f },
+	{ 1000.0f, 150.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 0.0f },
+	{ 1000.0f, 550.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 1.0f },
+	{ 920.0f, 550.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 1.0f },
 };
 
 CUSTOMVERTEX maki_left[] =
@@ -114,10 +117,10 @@ CUSTOMVERTEX maki_left[] =
 
 CUSTOMVERTEX maki_mid[] =
 {
-	{ 190.0f, 60.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
-	{ 190.0f, 60.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
-	{ 190.0f, 660.0f, 0.5f, 1.0f, 0xFFFFFFFF,1.0f, 1.0f },
-	{ 190.0f, 660.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
+	{ 190.0f, 50.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
+	{ 190.0f, 50.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
+	{ 190.0f, 680.0f, 0.5f, 1.0f, 0xFFFFFFFF,1.0f, 1.0f },
+	{ 190.0f, 680.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
 };
 
 CUSTOMVERTEX maki_right[] =
@@ -131,7 +134,7 @@ CUSTOMVERTEX maki_right[] =
 
 LPDIRECT3DTEXTURE9 pTexture[TEXMAX];	//	画像の情報を入れておく為のポインタ配列
 
-THING tomato;
+THING thing[2];
 //int PreKey[KEYMAX] = { 0 };
 //
 //int KeyState[4] = { 0 };
@@ -180,7 +183,7 @@ HRESULT Control(void)
 			stage_num += 1;
 			for (int count = 0; count < 4; count++)
 			{
-				serect_block[count].x -= 160.0f;
+				serect_block[count].x -= 262.0f;
 			}
 		}
 
@@ -189,7 +192,7 @@ HRESULT Control(void)
 			stage_num -= 1;
 			for (int count = 0; count < 4; count++)
 			{
-				serect_block[count].x += 160.0f;
+				serect_block[count].x += 262.0f;
 			}
 		}
 
@@ -221,15 +224,23 @@ HRESULT Control(void)
 
 		if (Key[RIGHT] == ON)
 		{
-			tomato.vecPosition.x += 0.01f;
+			thing[0].vecPosition.x += 0.01f;
 		}
 
 		if (Key[LEFT] == ON)
 		{
-			tomato.vecPosition.x -= 0.01f;
+			thing[0].vecPosition.x -= 0.01f;
 		}
 
+		if (Key[UP] == ON)
+		{
+			eye_z += 0.1f;
+		}
 
+		if (Key[DOWN] == ON)
+		{
+			eye_z -= 0.1f;
+		}
 
 
 		break;
@@ -263,7 +274,7 @@ void Render(void)
 	pD3Device->SetRenderState(D3DRS_SPECULARENABLE, TRUE);
 	
 	//ワールドトランスフォーム（絶対座標変換）
-	Set_Transform(&tomato);
+	Set_Transform(&thing[0]);
 
 	////ワールドトランスフォーム（絶対座標変換）
 	//D3DXMATRIXA16 matWorld, matPosition, matRotation, matRotation2,matScale;
@@ -286,7 +297,7 @@ void Render(void)
 
 	//pD3Device->SetTransform(D3DTS_WORLD, &matWorld);
 	//// ビュートランスフォーム（視点座標変換）
-	Set_View_Light(0.0f,1.0f,-3.0f);
+	Set_View_Light(eye_x,eye_y,eye_z);
 
 	//D3DXVECTOR3 vecEyePt(0.0f, 1.0f, -10.0f); //カメラ（視点）位置
 	//D3DXVECTOR3 vecLookatPt(0.0f, 0.0f, 0.0f);//注視位置
@@ -415,8 +426,9 @@ void Render(void)
 
 					Tex_Draw(pTexture, back_ground, STAGE2_TEX);
 
-					Draw_Thing(&tomato);
+						Draw_Thing(&thing[0]);
 
+					
 					//for (int i = 0; i < nMat; i++)
 					//{
 					//	pD3Device->SetMaterial(&pMeshMat[i]);	// マテリアル情報をセット
@@ -481,7 +493,6 @@ VOID FreeDx()
 	}
 	SAFE_RELEASE(pD3Device);
 	SAFE_RELEASE(pDirect3D);
-		SAFE_RELEASE(pMesh);
 
 
 }
@@ -559,7 +570,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	LPD3DXBUFFER	pMatBuf = NULL;
 
-	Mesh_Load_FromX("Tomato.x", &tomato, &D3DXVECTOR3(1, 1, 1));
+	Mesh_Load_FromX("Tomato.x", &thing[0], &D3DXVECTOR3(5.0f, 0.0f, 5.0f));
+	Mesh_Load_FromX("t.x", &thing[1], &D3DXVECTOR3(0.0f, 0.0f, 0.0f));
 
 	// xファイル読み込み
 	//if (FAILED(D3DXLoadMeshFromX(
