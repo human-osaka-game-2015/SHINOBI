@@ -39,7 +39,7 @@ int stage_num = STAGE1;
 
 FLOAT eye_x = 0.0f;
 FLOAT eye_y = 0.0f;
-FLOAT eye_z = 0.0f;
+FLOAT eye_z = -1.0f;
 //LPD3DXMESH			pMesh;	// メッシュデータ
 //DWORD				nMat;	// マテリアルの数
 //D3DMATERIAL9*			pMeshMat;	// マテリアル情報
@@ -50,12 +50,13 @@ FLOAT eye_z = 0.0f;
 enum TEXTURE
 {
 	BACKGROUND_TEX,
+	GROUND_TEX,
 	STAGE1_TEX,
 	STAGE2_TEX,
 	STAGE3_TEX,
 	TEAM_LOGO_TEX,
 	TITLE_TEX,
-	PLAYER_TEX,
+	//PLAYER_TEX,
 	MAKI_LEFT_TEX,
 	MAKI_MID_TEX,
 	MAKI_RIGHT_TEX,
@@ -73,6 +74,7 @@ enum SCENE
 	GAMEOVER_SCENE,
 	MAX_SCENE
 } current_scene;
+
 
 CUSTOMVERTEX team_logo[] =
 {
@@ -98,6 +100,24 @@ CUSTOMVERTEX back_ground[] =
 	{ 1280.0f, 720.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
 	{ 0.0f, 720.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
 };
+
+CUSTOMVERTEX ground[] =
+{
+	{ 0.0f, 600.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
+	{ 1280.0f, 600.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
+	{ 1280.0f, 720.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
+	{ 0.0f, 720.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
+};
+
+
+CUSTOMVERTEX back_ground_wall[] =
+{
+	{ 0.0f, 0.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
+	{ 640.0f, 0.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.25f, 0.0f },
+	{ 640.0f, 600.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.25f, 1.0f },
+	{ 0.0f, 600.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
+};
+
 
 CUSTOMVERTEX serect_block[] =
 {
@@ -137,10 +157,13 @@ LPDIRECT3DTEXTURE9 pTexture[TEXMAX];	//	画像の情報を入れておく為のポインタ配列
 
 THING thing[2];
 
+CUSTOMVERTEX tmp1[50][4];
+CUSTOMVERTEX tmp2[50][4];
+
 
 void Init()
 {
-	current_scene = TITLE_SCENE;
+	current_scene = SELECT_SCENE;
 }
 
 
@@ -195,7 +218,7 @@ HRESULT Control(void)
 		}
 
 
-		if (Key[ENTER] == PUSH && maki_right[2].x >= 1230.0f)
+		if (Key[Z] == PUSH && maki_right[2].x >= 1230.0f)
 		{
 			current_scene = GAME_SCENE;
 		}
@@ -220,24 +243,39 @@ HRESULT Control(void)
 		}
 
 
-		if (Key[RIGHT] == ON)
+		if (Key[RIGHT] == ON )
 		{
-			thing[0].vecPosition.x += 0.1f;
+			//eye_x -= 0.01f;
+			//thing[0].vecPosition.x += 0.1f;
+				for(int count_i = 0; count_i < 4; count_i++)
+				{
+					ground[count_i].x -= 5.0f;
+					back_ground_wall[count_i].x -= 5.0f;
+					
+
+				}
 		}
 
-		if (Key[LEFT] == ON)
+		if (Key[LEFT] == ON && tmp1[0][0].x <= 0.0f)
 		{
-			thing[0].vecPosition.x -= 0.1f;
+			//eye_x += 0.01f;
+			//thing[0].vecPosition.x -= 0.1f;
+			for (int count_i = 0; count_i < 4; count_i++)
+			{
+				ground[count_i].x += 5.0f;
+				back_ground_wall[count_i].x += 5.0f;
+			}
+
 		}
 
 		if (Key[UP] == ON)
 		{
-			eye_z += 0.1f;
+			thing[0].vecPosition.z += 0.1f;
 		}
 
 		if (Key[DOWN] == ON)
 		{
-			eye_z -= 0.1f;
+			thing[0].vecPosition.z -= 0.1f;
 		}
 
 
@@ -363,8 +401,8 @@ void Render(void)
 				case STAGE2:
 					BeginScene();
 
-					Tex_Draw(pTexture, back_ground, STAGE2_TEX);
-					
+
+										
 					Transform_Draw_Thing(&thing[0]);
 					
 					Transform_Draw_Thing(&thing[1]);
@@ -374,12 +412,41 @@ void Render(void)
 
 				case STAGE3:
 					BeginScene();
-					Tex_Draw(pTexture, back_ground, STAGE3_TEX);
+
+
+					//Tex_Draw(pTexture, ground, GROUND_TEX);
+					//Tex_Draw(pTexture, back_ground_wall, BACKGROUND_TEX);
+
+					for (int count_i = 0; count_i < 50;count_i++)
+					{
+						for (int count_j = 0; count_j < 4; count_j++)
+						{
+							tmp1[count_i][count_j] = ground[count_j];
+							tmp2[count_i][count_j] = back_ground_wall[count_j];
+						}
+					}
+
+					
+					for (int count_i = 0; count_i < 50; count_i++)
+					{
+						for (int count_j = 0; count_j < 4; count_j++)
+						{
+							tmp1[count_i][count_j].x += count_i * 120.0f;
+							tmp2[count_i][count_j].x += count_i * 620.0f;
+						}
+					}
+					
+					for (int count = 0; count < 50;count++)
+					{
+						Tex_Draw(pTexture, tmp1[count], GROUND_TEX);
+						Tex_Draw(pTexture, tmp2[count], BACKGROUND_TEX);
+					}
+					
+					Transform_Draw_Thing(&thing[0]);
 
 
 					EndScene();
 					break;
-
 			}
 
 
@@ -420,7 +487,7 @@ VOID FreeDx()
 	SAFE_RELEASE(pKeyDevice);
 	SAFE_RELEASE(g_pMouse);
 	SAFE_RELEASE(pDinput);
-	for (int i = 0; i <= TEXMAX; i++)
+	for (int i = 0; i < TEXMAX; i++)
 	{
 		SAFE_RELEASE(pTexture[i]);
 	}
@@ -494,16 +561,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Tex_Load_EX(pTexture, "makimoo.png", MAKI_LEFT_TEX, 255, 255, 255, 255);
 	Tex_Load_EX(pTexture, "makikami.png", MAKI_MID_TEX, 255, 255, 255, 255);
 	Tex_Load_EX(pTexture, "maki3.png", MAKI_RIGHT_TEX, 255, 255, 255, 255);
-	Tex_Load(pTexture, "white.bmp", WHITE_TEX);
+	Tex_Load(pTexture, "white.png", WHITE_TEX);
 	Tex_Load(pTexture, "titlerogo2_cg3.jpg", TITLE_TEX);
 	Tex_Load(pTexture, "team_rogo_y.png", TEAM_LOGO_TEX);
 	Tex_Load(pTexture, "stage1.bmp", STAGE1_TEX);
 	Tex_Load(pTexture, "stage2.bmp", STAGE2_TEX);
 	Tex_Load(pTexture, "stage3.bmp", STAGE3_TEX);
+	Tex_Load(pTexture, "haikei_all.png", BACKGROUND_TEX);
+	Tex_Load(pTexture, "zmen_a.png", GROUND_TEX);
 
-	LPD3DXBUFFER	pMatBuf = NULL;
+	//LPD3DXBUFFER	pMatBuf = NULL;
 
-	Mesh_Load_FromX("Tomato.x", &thing[0], &D3DXVECTOR3(5.0f, 0.0f, 5.0f));
+	Mesh_Load_FromX("Tomato.x", &thing[0], &D3DXVECTOR3(0.0f, -3.5f, 9.0f));
 	Mesh_Load_FromX("t.x", &thing[1], &D3DXVECTOR3(0.0f, 0.0f, 0.0f));
 
 	RenderSet();
@@ -516,59 +585,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	// スペキュラ（鏡面反射）を有効にする
 	pD3Device->SetRenderState(D3DRS_SPECULARENABLE, TRUE);
 
-	// xファイル読み込み
-	//if (FAILED(D3DXLoadMeshFromX(
-	//	"Tomato.x",				// xファイルのファイルパス
-	//	D3DXMESH_MANAGED,	// 頂点バッファ作成オプション
-	//	pD3Device,				// Direct3DDeviceポインタ
-	//	NULL,				// 隣接性データポリゴン情報 使わない
-	//	&pMatBuf,			// マテリアル情報
-	//	NULL,				// エフェクト 使わない
-	//	&nMat,				// メッシュの数取得
-	//	&pMesh			// メッシュ情報のポインタ
-	//	)))
-	//{
-	//	return E_FAIL;
-	//}
-
-	//if (!(pMesh->GetFVF() & D3DFVF_NORMAL)) {
-
-	//	ID3DXMesh* pTempMesh = NULL;
-
-	//	pMesh->CloneMeshFVF(pMesh->GetOptions(),
-	//		pMesh->GetFVF() | D3DFVF_NORMAL, GetDevice(), &pTempMesh);
-
-	//	D3DXComputeNormals(pTempMesh, NULL);
-	//	pMesh->Release();
-	//	pMesh = pTempMesh;
-	//}
-
-	//// マテリアル情報を取り出す
-	//D3DXMATERIAL*	d3Mat = (D3DXMATERIAL*)pMatBuf->GetBufferPointer();
-	//pMeshMat = new D3DMATERIAL9[nMat];		// メッシュ情報を確保
-	//pMeshTex = new LPDIRECT3DTEXTURE9[nMat];// テクスチャを確保
-	//for (int i = 0; i < nMat; i++)
-	//{
-	//	pMeshMat[i] = d3Mat[i].MatD3D;			// マテリアル情報セット
-	//	pMeshMat[i].Ambient = pMeshMat[i].Diffuse;// 環境光初期化
-	//	pMeshTex[i] = NULL;	// テクスチャ初期化
-
-	//	// 使用しているテクスチャがあれば読み込む
-	//	if (d3Mat[i].pTextureFilename != NULL &&
-	//		lstrlen(d3Mat[i].pTextureFilename) > 0)
-	//	{
-	//		// テクスチャ読み込み
-	//		if (FAILED(D3DXCreateTextureFromFile(
-	//			pD3Device,
-	//			d3Mat[i].pTextureFilename,
-	//			&pMeshTex[i])))
-	//		{
-	//			return E_FAIL;
-	//		}
-	//	}
-	//}
-	//// マテリアル情報開放
-	//pMatBuf->Release();
 
 
 	Init();
