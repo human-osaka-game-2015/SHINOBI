@@ -9,8 +9,11 @@
 #include "directx_lib.h"
 #include "d_sound.h"
 
-#define TITLE 	TEXT("SHINOBI")
+#include "CSV _Load.h"
 
+#define TITLE 	TEXT("SHINOBI")
+#define STAGE_WIDTH 102
+#define TOMATOSPEED 100.0f
 enum STAGE
 {
 	STAGE1 = 1,
@@ -75,7 +78,26 @@ enum SCENE
 	MAX_SCENE
 } current_scene;
 
+//壁関係のCUSTOMVERTEX------------------------------------------------
+CUSTOMVERTEX ground[] =
+{
+	{ 0.0f, 600.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
+	{ 1280.0f, 600.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
+	{ 1280.0f, 720.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
+	{ 0.0f, 720.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
+};
 
+
+CUSTOMVERTEX back_ground_wall[] =
+{
+	{ 0.0f, 0.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
+	{ 320.0f, 0.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.125f, 0.0f },
+	{ 320.0f, 600.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.125f, 1.0f },
+	{ 0.0f, 600.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
+};
+
+
+//--------------------------------------------------------------------
 CUSTOMVERTEX team_logo[] =
 {
 	{ 0.0f, 0.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
@@ -101,30 +123,14 @@ CUSTOMVERTEX back_ground[] =
 	{ 0.0f, 720.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
 };
 
-CUSTOMVERTEX ground[] =
-{
-	{ 0.0f, 600.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
-	{ 1280.0f, 600.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
-	{ 1280.0f, 720.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
-	{ 0.0f, 720.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
-};
-
-
-CUSTOMVERTEX back_ground_wall[] =
-{
-	{ 0.0f, 0.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
-	{ 640.0f, 0.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.25f, 0.0f },
-	{ 640.0f, 600.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.25f, 1.0f },
-	{ 0.0f, 600.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
-};
 
 
 CUSTOMVERTEX serect_block[] =
 {
-	{ 920.0f, 150.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 0.0f },
+	{ 920.0f, 150.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 0.0f  },
 	{ 1000.0f, 150.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 0.0f },
 	{ 1000.0f, 550.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 1.0f },
-	{ 920.0f, 550.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 1.0f },
+	{ 920.0f, 550.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 1.0f  },
 };
 
 CUSTOMVERTEX maki_left[] =
@@ -155,10 +161,24 @@ CUSTOMVERTEX maki_right[] =
 LPDIRECT3DTEXTURE9 pTexture[TEXMAX];	//	画像の情報を入れておく為のポインタ配列
 
 
-THING thing[2];
+THING thing;
 
-CUSTOMVERTEX tmp1[50][4];
-CUSTOMVERTEX tmp2[50][4];
+
+CUSTOMVERTEX tmp_ground[STAGE_WIDTH][4];
+
+CUSTOMVERTEX tmp_wall_left[STAGE_WIDTH][4];
+
+CUSTOMVERTEX tmp_wall_right[STAGE_WIDTH][4];
+
+CUSTOMVERTEX tmp_husuma_left[STAGE_WIDTH][4];
+
+CUSTOMVERTEX tmp_husuma_right[STAGE_WIDTH][4];
+
+CUSTOMVERTEX tmp_window_right[STAGE_WIDTH][4];
+
+CUSTOMVERTEX tmp_window_left[STAGE_WIDTH][4];
+
+
 
 
 void Init()
@@ -243,40 +263,37 @@ HRESULT Control(void)
 		}
 
 
-		if (Key[RIGHT] == ON )
+		if (Key[RIGHT] == ON && tmp_husuma_right[101][1].x >= 1280.0f)
 		{
 			//eye_x -= 0.01f;
 			//thing[0].vecPosition.x += 0.1f;
 				for(int count_i = 0; count_i < 4; count_i++)
 				{
-					ground[count_i].x -= 5.0f;
-					back_ground_wall[count_i].x -= 5.0f;
-					
-
+					ground[count_i].x -= TOMATOSPEED;
+					back_ground_wall[count_i].x -= TOMATOSPEED;
 				}
 		}
 
-		if (Key[LEFT] == ON && tmp1[0][0].x <= 0.0f)
+		if (Key[LEFT] == ON && tmp_ground[0][0].x <= 0.0f)
 		{
 			//eye_x += 0.01f;
 			//thing[0].vecPosition.x -= 0.1f;
 			for (int count_i = 0; count_i < 4; count_i++)
 			{
-				ground[count_i].x += 5.0f;
-				back_ground_wall[count_i].x += 5.0f;
+				ground[count_i].x += TOMATOSPEED;
+				back_ground_wall[count_i].x += TOMATOSPEED;
 			}
-
 		}
 
-		if (Key[UP] == ON)
-		{
-			thing[0].vecPosition.z += 0.1f;
-		}
+		//if (Key[UP] == ON)
+		//{
+		//	thing.vecPosition.z += 0.1f;
+		//}
 
-		if (Key[DOWN] == ON)
-		{
-			thing[0].vecPosition.z -= 0.1f;
-		}
+		//if (Key[DOWN] == ON)
+		//{
+		//	thing.vecPosition.z -= 0.1f;
+		//}
 
 
 		break;
@@ -400,49 +417,93 @@ void Render(void)
 
 				case STAGE2:
 					BeginScene();
-
-
-										
-					Transform_Draw_Thing(&thing[0]);
+	
+					Transform_Draw_Thing(&thing);
 					
-					Transform_Draw_Thing(&thing[1]);
-
 					EndScene();
 					break;
 
 				case STAGE3:
 					BeginScene();
 
-
 					//Tex_Draw(pTexture, ground, GROUND_TEX);
 					//Tex_Draw(pTexture, back_ground_wall, BACKGROUND_TEX);
 
-					for (int count_i = 0; count_i < 50;count_i++)
+					for (int count_i = 0; count_i < STAGE_WIDTH;count_i++)
 					{
-						for (int count_j = 0; count_j < 4; count_j++)
+						for (int count_n = 0; count_n < 4; count_n++)
 						{
-							tmp1[count_i][count_j] = ground[count_j];
-							tmp2[count_i][count_j] = back_ground_wall[count_j];
+							tmp_ground[count_i][count_n] = ground[count_n];
+							tmp_wall_left[count_i][count_n] = back_ground_wall[count_n];
+							tmp_wall_right[count_i][count_n] = back_ground_wall[count_n];
+							tmp_window_left[count_i][count_n] = back_ground_wall[count_n];
+							tmp_window_right[count_i][count_n] = back_ground_wall[count_n];
+							tmp_husuma_left[count_i][count_n] = back_ground_wall[count_n];
+							tmp_husuma_right[count_i][count_n] = back_ground_wall[count_n];
+
+							tmp_wall_right[count_i][count_n].tu += 0.125f;
+							tmp_window_left[count_i][count_n].tu += 0.25f;
+							tmp_window_right[count_i][count_n].tu += 0.375f;
+							tmp_husuma_left[count_i][count_n].tu += 0.5f;
+							tmp_husuma_right[count_i][count_n].tu += 0.625;
+
 						}
 					}
 
 					
-					for (int count_i = 0; count_i < 50; count_i++)
+					for (int count_i = 0; count_i < STAGE_WIDTH; count_i++)
 					{
 						for (int count_j = 0; count_j < 4; count_j++)
 						{
-							tmp1[count_i][count_j].x += count_i * 120.0f;
-							tmp2[count_i][count_j].x += count_i * 620.0f;
+							tmp_ground[count_i][count_j].x += count_i * 1280.0f;
+							tmp_wall_left[count_i][count_j].x += count_i * 320.0f;
+							tmp_wall_right[count_i][count_j].x += count_i * 320.0f;
+							tmp_window_left[count_i][count_j].x += count_i * 320.0f;
+							tmp_window_right[count_i][count_j].x += count_i * 320.0f;
+							tmp_husuma_left[count_i][count_j].x += count_i * 320.0f;
+							tmp_husuma_right[count_i][count_j].x += count_i * 320.0f;
+
 						}
 					}
 					
-					for (int count = 0; count < 50;count++)
+
+					for (int count = 0; count < STAGE_WIDTH;count++)
 					{
-						Tex_Draw(pTexture, tmp1[count], GROUND_TEX);
-						Tex_Draw(pTexture, tmp2[count], BACKGROUND_TEX);
+						switch (stage_state[count])
+						{
+						case WALL_LEFT:
+							Tex_Draw(pTexture, tmp_ground[count], GROUND_TEX);
+							Tex_Draw(pTexture, tmp_wall_left[count], BACKGROUND_TEX);
+							break;
+
+						case WALL_RIGHT:
+							Tex_Draw(pTexture, tmp_ground[count], GROUND_TEX);
+							Tex_Draw(pTexture, tmp_wall_right[count], BACKGROUND_TEX);
+							break;
+
+						case WINDOW_LEFT:
+							Tex_Draw(pTexture, tmp_ground[count], GROUND_TEX);
+							Tex_Draw(pTexture, tmp_window_left[count], BACKGROUND_TEX);
+							break;
+
+						case WINDOW_RIGHT:
+							Tex_Draw(pTexture, tmp_ground[count], GROUND_TEX);
+							Tex_Draw(pTexture, tmp_window_right[count], BACKGROUND_TEX);
+							break;
+
+						case HUSUMA_LEFT:
+							Tex_Draw(pTexture, tmp_ground[count], GROUND_TEX);
+							Tex_Draw(pTexture, tmp_husuma_left[count], BACKGROUND_TEX);
+							break;
+
+						case HUSUMA_RIGHT:
+							Tex_Draw(pTexture, tmp_ground[count], GROUND_TEX);
+							Tex_Draw(pTexture, tmp_husuma_right[count], BACKGROUND_TEX);
+							break;
+						}
 					}
 					
-					Transform_Draw_Thing(&thing[0]);
+					Transform_Draw_Thing(&thing);
 
 
 					EndScene();
@@ -557,7 +618,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 	D3DCreate();
-
+	csv_file_load("stage_info.csv");
 	Tex_Load_EX(pTexture, "makimoo.png", MAKI_LEFT_TEX, 255, 255, 255, 255);
 	Tex_Load_EX(pTexture, "makikami.png", MAKI_MID_TEX, 255, 255, 255, 255);
 	Tex_Load_EX(pTexture, "maki3.png", MAKI_RIGHT_TEX, 255, 255, 255, 255);
@@ -572,8 +633,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	//LPD3DXBUFFER	pMatBuf = NULL;
 
-	Mesh_Load_FromX("Tomato.x", &thing[0], &D3DXVECTOR3(0.0f, -3.5f, 9.0f));
-	Mesh_Load_FromX("t.x", &thing[1], &D3DXVECTOR3(0.0f, 0.0f, 0.0f));
+	Mesh_Load_FromX("Tomato.x", &thing, &D3DXVECTOR3(0.0f, -3.5f, 9.0f));
 
 	RenderSet();
 	// Zバッファー処理を有効にする

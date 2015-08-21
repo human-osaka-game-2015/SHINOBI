@@ -67,6 +67,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CSV _Load.cpp" />
     <ClCompile Include="dinput_lib.cpp" />
     <ClCompile Include="directx_lib.cpp" />
     <ClCompile Include="dx.render_lib.cpp" />
@@ -74,6 +75,7 @@
     <ClCompile Include="Sound.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CSV _Load.h" />
     <ClInclude Include="dinput_lib.h" />
     <ClInclude Include="directx_lib.h" />
     <ClInclude Include="dx.render_lib.h" />
