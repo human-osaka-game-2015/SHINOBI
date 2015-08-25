@@ -166,14 +166,17 @@ void Mesh_Load_FromX(LPTSTR xfilename, pTHING pThing, D3DXVECTOR3* pvecPosition)
 
 }
 
-void Set_Transform(THING* pThing)
+void Set_Transform(THING* pThing,float fScale)
 {
 	//ワールドトランスフォーム（絶対座標変換）
-	D3DXMATRIXA16 matWorld, matPosition;
+	D3DXMATRIXA16 matWorld, matPosition,matScale;
 	D3DXMatrixIdentity(&matWorld);
 	D3DXMatrixTranslation(&matPosition, pThing->vecPosition.x, pThing->vecPosition.y,
 		pThing->vecPosition.z);
 	D3DXMatrixMultiply(&matWorld, &matWorld, &matPosition);
+
+	D3DXMatrixScaling(&matScale, fScale, fScale, fScale);
+	D3DXMatrixMultiply(&matWorld, &matWorld, &matScale);
 	pD3Device->SetTransform(D3DTS_WORLD, &matWorld);
 }
 
@@ -207,7 +210,6 @@ void Set_View_Light(FLOAT Eye_x, FLOAT Eye_y, FLOAT Eye_z)
 	light.Range = 200.0f;
 	pD3Device->SetLight(0, &light);
 	pD3Device->LightEnable(0, TRUE);
-
 }
 
 void Draw_Thing(THING* pThing)
@@ -219,13 +221,30 @@ void Draw_Thing(THING* pThing)
 		pD3Device->SetTexture(0, pThing->pMeshTex[i]);
 		pThing->pMesh->DrawSubset(i);
 	}
-
 }
 
-void Transform_Draw_Thing(THING* pThing)
+
+void Transform_Draw_Thing(THING* pThing,float fScale)
 {
-	Set_Transform(pThing);
-	Draw_Thing(pThing);
+	//ワールドトランスフォーム（絶対座標変換）
+	D3DXMATRIXA16 matWorld, matPosition, matScale;
+	D3DXMatrixIdentity(&matWorld);
+	D3DXMatrixTranslation(&matPosition, pThing->vecPosition.x, pThing->vecPosition.y,
+		pThing->vecPosition.z);
+	D3DXMatrixMultiply(&matWorld, &matWorld, &matPosition);
+
+	D3DXMatrixScaling(&matScale, fScale, fScale, fScale);
+	D3DXMatrixMultiply(&matWorld, &matWorld, &matScale);
+	pD3Device->SetTransform(D3DTS_WORLD, &matWorld);
+
+	// レンダリング	 
+	for (DWORD i = 0; i<pThing->nMat; i++)
+	{
+		pD3Device->SetMaterial(&pThing->pMeshMat[i]);
+		pD3Device->SetTexture(0, pThing->pMeshTex[i]);
+		pThing->pMesh->DrawSubset(i);
+	}
+
 }
 
 HRESULT Tex_Load(LPDIRECT3DTEXTURE9 *pTexture, const char* name, int TexID)

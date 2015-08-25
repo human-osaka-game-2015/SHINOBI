@@ -11,9 +11,13 @@
 
 #include "CSV _Load.h"
 
-#define TITLE 	TEXT("SHINOBI")
+#define TITLE 	TEXT("～SHINOBI～決戦！闇の六武衆")
 #define STAGE_WIDTH 102
-#define TOMATOSPEED 100.0f
+#define PLAYER_SPEED 20.0f
+
+
+#define gravity 2.0
+
 enum STAGE
 {
 	STAGE1 = 1,
@@ -37,12 +41,25 @@ KEYSTATE Key[KEYMAX];
 
 bool maki_open = false;
 bool next_scene = false;
+bool fire_flag = false;
+bool character_is_right = true;
 
 int stage_num = STAGE1;
+
+bool sky_flag = false;
+
+#define JUMP_POWER 40.0f
+int Jump_Flag = 10;
+
+int game_time = 0;
+
+float g_v0 = 0.0f;
+float jump_v0 = JUMP_POWER;
 
 FLOAT eye_x = 0.0f;
 FLOAT eye_y = 0.0f;
 FLOAT eye_z = -1.0f;
+float fscale = 0.2f;
 //LPD3DXMESH			pMesh;	// メッシュデータ
 //DWORD				nMat;	// マテリアルの数
 //D3DMATERIAL9*			pMeshMat;	// マテリアル情報
@@ -53,13 +70,16 @@ FLOAT eye_z = -1.0f;
 enum TEXTURE
 {
 	BACKGROUND_TEX,
+	PLAYER_ATTACK_TEX,
+	PLAYER_DASH_TEX,
 	GROUND_TEX,
 	STAGE1_TEX,
 	STAGE2_TEX,
 	STAGE3_TEX,
 	TEAM_LOGO_TEX,
 	TITLE_TEX,
-	//PLAYER_TEX,
+	SELECT_BACK_GROUND,
+	FIRE_EFFECT_TEX,
 	MAKI_LEFT_TEX,
 	MAKI_MID_TEX,
 	MAKI_RIGHT_TEX,
@@ -127,37 +147,53 @@ CUSTOMVERTEX back_ground[] =
 
 CUSTOMVERTEX serect_block[] =
 {
-	{ 920.0f, 150.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 0.0f  },
-	{ 1000.0f, 150.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 0.0f },
-	{ 1000.0f, 550.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 1.0f },
-	{ 920.0f, 550.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 1.0f  },
+	{ 920.0f, 170.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 0.0f  },
+	{ 1000.0f, 170.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 0.0f },
+	{ 1000.0f, 570.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 1.0f },
+	{ 920.0f, 570.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 1.0f  },
 };
 
 CUSTOMVERTEX maki_left[] =
 {
-	{ 100.0f, 60.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
-	{ 200.0f, 60.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
-	{ 200.0f, 660.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
-	{ 100.0f, 660.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
+	{ 100.0f, 80.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
+	{ 200.0f, 80.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
+	{ 200.0f, 680.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
+	{ 100.0f, 680.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
 };
 
 CUSTOMVERTEX maki_mid[] =
 {
-	{ 190.0f, 50.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
-	{ 190.0f, 50.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
-	{ 190.0f, 680.0f, 0.5f, 1.0f, 0xFFFFFFFF,1.0f, 1.0f },
-	{ 190.0f, 680.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
+	{ 190.0f, 70.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
+	{ 190.0f, 70.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
+	{ 190.0f, 700.0f, 0.5f, 1.0f, 0xFFFFFFFF,1.0f, 1.0f },
+	{ 190.0f, 700.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
 };
 
 CUSTOMVERTEX maki_right[] =
 {
-	{ 180.0f, 78.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
-	{ 200.0f, 78.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
-	{ 200.0f, 650.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
-	{ 180.0f, 650.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
+	{ 180.0f, 98.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
+	{ 200.0f, 98.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
+	{ 200.0f, 670.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
+	{ 180.0f, 670.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
 };
 
+CUSTOMVERTEX box[] =
+{
+	{ 540.0f, 500.0f, 0.5f, 1.0f, 0x66FFFFFF, 0.0f, 0.0f },
+	{ 735.0f, 500.0f, 0.5f, 1.0f, 0x66FFFFFF, 1.0f, 0.0f },
+	{ 735.0f, 620.0f, 0.5f, 1.0f, 0x66FFFFFF, 1.0f, 1.0f },
+	{ 540.0f, 620.0f, 0.5f, 1.0f, 0x66FFFFFF, 0.0f, 1.0f },
+};
 
+CUSTOMVERTEX player[] =
+{
+	{ 540.0f, 340.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
+	{ 735.0f, 340.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.25f, 0.0f },
+	{ 735.0f, 500.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.25f, 1.0f },
+	{ 540.0f, 500.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
+};
+
+CUSTOMVERTEX fire[4];
 LPDIRECT3DTEXTURE9 pTexture[TEXMAX];	//	画像の情報を入れておく為のポインタ配列
 
 
@@ -249,51 +285,244 @@ HRESULT Control(void)
 
 
 	case GAME_SCENE:
-		KeyCheck_Dinput(&Key[ENTER], DIK_RETURN);
-		KeyCheck_Dinput(&Key[LEFT], DIK_LEFT);
-		KeyCheck_Dinput(&Key[UP], DIK_UP);
-		KeyCheck_Dinput(&Key[DOWN], DIK_DOWN);
-		KeyCheck_Dinput(&Key[RIGHT], DIK_RIGHT);
-		KeyCheck_Dinput(&Key[P], DIK_P);
-		KeyCheck_Dinput(&Key[O], DIK_O);
-
-		if (Key[ENTER] == PUSH)
+		switch (stage_num)
 		{
-			current_scene = SELECT_SCENE;
-		}
-
-
-		if (Key[RIGHT] == ON && tmp_husuma_right[101][1].x >= 1280.0f)
-		{
-			//eye_x -= 0.01f;
-			//thing[0].vecPosition.x += 0.1f;
-				for(int count_i = 0; count_i < 4; count_i++)
-				{
-					ground[count_i].x -= TOMATOSPEED;
-					back_ground_wall[count_i].x -= TOMATOSPEED;
-				}
-		}
-
-		if (Key[LEFT] == ON && tmp_ground[0][0].x <= 0.0f)
-		{
-			//eye_x += 0.01f;
-			//thing[0].vecPosition.x -= 0.1f;
-			for (int count_i = 0; count_i < 4; count_i++)
+		case STAGE1:
+			KeyCheck_Dinput(&Key[ENTER], DIK_RETURN);
+			if (Key[ENTER] == PUSH)
 			{
-				ground[count_i].x += TOMATOSPEED;
-				back_ground_wall[count_i].x += TOMATOSPEED;
+				current_scene = SELECT_SCENE;
 			}
+
+			break;
+
+		case STAGE2:
+			KeyCheck_Dinput(&Key[ENTER], DIK_RETURN);
+			KeyCheck_Dinput(&Key[LEFT], DIK_LEFT);
+			KeyCheck_Dinput(&Key[UP], DIK_UP);
+			KeyCheck_Dinput(&Key[DOWN], DIK_DOWN);
+			KeyCheck_Dinput(&Key[RIGHT], DIK_RIGHT);
+			KeyCheck_Dinput(&Key[X], DIK_X);
+			KeyCheck_Dinput(&Key[Z], DIK_Z);
+
+
+			if (Key[ENTER] == PUSH)
+			{
+				current_scene = SELECT_SCENE;
+			}
+
+			if (Key[RIGHT] == ON)
+			{
+				if (game_time == 0)
+				{
+					player[0].tu = 0.0f;
+					player[1].tu = 0.25f;
+					player[2].tu = 0.25f;
+					player[3].tu = 0.0f;
+					character_is_right = true;
+				}
+
+				game_time++;
+				
+				if (player[3].tu <= 0.75f && game_time % 5 == 0)
+				{
+					for (int count = 0; count < 4; count++)
+					{
+						player[count].tu += 0.25f;
+					}
+				}
+
+				if (player[3].tu >= 0.75f)
+				{
+					player[0].tu = 0.5f;
+					player[1].tu = 0.75f;
+					player[2].tu = 0.75f;
+					player[3].tu = 0.5f;
+				}
+
+				if (tmp_husuma_right[101][1].x >= 1280.0f && player[3].x == 540.0f)
+				{
+					for(int count_i = 0; count_i < 4; count_i++)
+					{
+						ground[count_i].x -= PLAYER_SPEED;
+						back_ground_wall[count_i].x -= PLAYER_SPEED;
+					}
+				}
+				else if (player[2].x <= 1280.0f)
+				{
+					for (int count = 0; count < 4; count++)
+					{
+						player[count].x += PLAYER_SPEED;
+					}
+				}
+
+			}
+			
+			if (Key[RIGHT] == RELEASE)
+			{
+				player[0].tu = 0.0f;
+				player[1].tu = 0.25f;
+				player[2].tu = 0.25f;
+				player[3].tu = 0.0f;
+
+				game_time = 0;
+			}
+
+			if (Key[LEFT] == ON)
+			{
+				if (game_time == 0)
+				{
+					player[0].tu = 0.25f;
+					player[1].tu = 0.0f;
+					player[2].tu = 0.0f;
+					player[3].tu = 0.25f;
+					character_is_right = false;
+				}
+
+				game_time++;
+
+				if (player[3].tu <= 0.75f && game_time % 5 == 0)
+				{
+					for (int count = 0; count < 4; count++)
+					{
+						player[count].tu += 0.25f;
+					}
+				}
+
+				if (player[3].tu >= 0.75f)
+				{
+					player[0].tu = 0.75f;
+					player[1].tu = 0.5f;
+					player[2].tu = 0.5f;
+					player[3].tu = 0.75f;
+				}
+				if (tmp_ground[0][0].x <= 0.0f && player[3].x == 540.0f)
+				{
+					for (int count_i = 0; count_i < 4; count_i++)
+					{
+						ground[count_i].x += PLAYER_SPEED;
+						back_ground_wall[count_i].x += PLAYER_SPEED;
+					}
+				}
+				else if (player[0].x >= 0.0f)
+				{
+					for (int count = 0; count < 4; count++)
+					{
+						player[count].x -= PLAYER_SPEED;
+					}
+				}
+
+			}
+			if (Key[LEFT] == RELEASE)
+			{
+				player[0].tu = 0.25f;
+				player[1].tu = 0.0f;
+				player[2].tu = 0.0f;
+				player[3].tu = 0.25f;
+
+				game_time = 0;
+			}
+
+			if (player[2].y < ground[2].y - 20.0f)
+			{
+				sky_flag = true;
+				if (character_is_right == true)
+				{
+					player[0].tu = 0.75f;
+					player[1].tu = 1.0f;
+					player[2].tu = 1.0f;
+					player[3].tu = 0.75f;
+				}
+				else
+				{
+					player[0].tu = 1.0f;
+					player[1].tu = 0.75f;
+					player[2].tu = 0.75f;
+					player[3].tu = 1.0f;
+
+				}
+			}
+
+			if (Key[UP] == PUSH && sky_flag == false)
+			{
+				Jump_Flag = 1;
+			}
+
+
+			if (sky_flag == true && Jump_Flag == 10)
+			{
+				g_v0 += gravity;
+				for (int count = 0; count < 4; count++)
+				{
+					player[count].y += g_v0;
+				}
+
+				if (player[2].y >= ground[2].y - 20.0f)
+				{
+					//地面に入りこんだ差
+					float maegin = 0;
+					maegin = player[2].y - (ground[2].y - 20.0f);
+					for (int count = 0; count < 4;count++)
+					{
+						player[count].y -= maegin;
+					}
+					sky_flag = false;
+					g_v0 = 0.0f;
+					jump_v0 = JUMP_POWER;
+					if (character_is_right == true)
+					{
+						player[0].tu = 0.0f;
+						player[1].tu = 0.25f;
+						player[2].tu = 0.25f;
+						player[3].tu = 0.0f;
+					}
+					else
+					{
+						player[0].tu = 0.25f;
+						player[1].tu = 0.0f;
+						player[2].tu = 0.0f;
+						player[3].tu = 0.25f;
+
+					}
+				}
+			}
+
+			if (Jump_Flag == 1)
+			{
+				for (int count = 0; count < 4; count++)
+				{
+					player[count].y -= jump_v0;
+				}
+				
+				jump_v0 -= gravity;
+				
+				if (jump_v0 < 0)
+				{
+					Jump_Flag = 10;
+				}
+
+			}
+
+			if (Key[Z] == PUSH)
+			{
+				fire_flag = true;
+			}
+
+			break;
+
+		case STAGE3:
+			KeyCheck_Dinput(&Key[ENTER], DIK_RETURN);
+			if (Key[ENTER] == PUSH)
+			{
+				current_scene = SELECT_SCENE;
+			}
+
+			break;
+
 		}
 
-		//if (Key[UP] == ON)
-		//{
-		//	thing.vecPosition.z += 0.1f;
-		//}
 
-		//if (Key[DOWN] == ON)
-		//{
-		//	thing.vecPosition.z -= 0.1f;
-		//}
+
 
 
 		break;
@@ -353,6 +582,7 @@ void Render(void)
 
 		case SELECT_SCENE:
 			BeginScene();
+			Tex_Draw(pTexture,back_ground,SELECT_BACK_GROUND);
 			Tex_Draw(pTexture,maki_left,MAKI_LEFT_TEX);
 			Tex_Draw(pTexture, maki_mid, MAKI_MID_TEX);
 			Tex_Draw(pTexture, maki_right, MAKI_RIGHT_TEX);
@@ -418,16 +648,160 @@ void Render(void)
 				case STAGE2:
 					BeginScene();
 	
-					Transform_Draw_Thing(&thing);
+					for (int count_i = 0; count_i < STAGE_WIDTH; count_i++)
+					{
+						for (int count_n = 0; count_n < 4; count_n++)
+						{
+							tmp_ground[count_i][count_n] = ground[count_n];
+							tmp_wall_left[count_i][count_n] = back_ground_wall[count_n];
+							tmp_wall_right[count_i][count_n] = back_ground_wall[count_n];
+							tmp_window_left[count_i][count_n] = back_ground_wall[count_n];
+							tmp_window_right[count_i][count_n] = back_ground_wall[count_n];
+							tmp_husuma_left[count_i][count_n] = back_ground_wall[count_n];
+							tmp_husuma_right[count_i][count_n] = back_ground_wall[count_n];
+
+							tmp_wall_right[count_i][count_n].tu += 0.125f;
+							tmp_window_left[count_i][count_n].tu += 0.25f;
+							tmp_window_right[count_i][count_n].tu += 0.375f;
+							tmp_husuma_left[count_i][count_n].tu += 0.5f;
+							tmp_husuma_right[count_i][count_n].tu += 0.625;
+
+						}
+					}
+
+
+					for (int count_i = 0; count_i < STAGE_WIDTH; count_i++)
+					{
+						for (int count_j = 0; count_j < 4; count_j++)
+						{
+							tmp_ground[count_i][count_j].x += count_i * 1280.0f;
+							tmp_wall_left[count_i][count_j].x += count_i * 320.0f;
+							tmp_wall_right[count_i][count_j].x += count_i * 320.0f;
+							tmp_window_left[count_i][count_j].x += count_i * 320.0f;
+							tmp_window_right[count_i][count_j].x += count_i * 320.0f;
+							tmp_husuma_left[count_i][count_j].x += count_i * 320.0f;
+							tmp_husuma_right[count_i][count_j].x += count_i * 320.0f;
+						}
+					}
+
+
+					for (int count = 0; count < STAGE_WIDTH; count++)
+					{
+						switch (stage_state[count])
+						{
+						case WALL_LEFT:
+							Tex_Draw(pTexture, tmp_ground[count], GROUND_TEX);
+							Tex_Draw(pTexture, tmp_wall_left[count], BACKGROUND_TEX);
+							break;
+
+						case WALL_RIGHT:
+							Tex_Draw(pTexture, tmp_ground[count], GROUND_TEX);
+							Tex_Draw(pTexture, tmp_wall_right[count], BACKGROUND_TEX);
+							break;
+
+						case WINDOW_LEFT:
+							Tex_Draw(pTexture, tmp_ground[count], GROUND_TEX);
+							Tex_Draw(pTexture, tmp_window_left[count], BACKGROUND_TEX);
+							break;
+
+						case WINDOW_RIGHT:
+							Tex_Draw(pTexture, tmp_ground[count], GROUND_TEX);
+							Tex_Draw(pTexture, tmp_window_right[count], BACKGROUND_TEX);
+							break;
+
+						case HUSUMA_LEFT:
+							Tex_Draw(pTexture, tmp_ground[count], GROUND_TEX);
+							Tex_Draw(pTexture, tmp_husuma_left[count], BACKGROUND_TEX);
+							break;
+
+						case HUSUMA_RIGHT:
+							Tex_Draw(pTexture, tmp_ground[count], GROUND_TEX);
+							Tex_Draw(pTexture, tmp_husuma_right[count], BACKGROUND_TEX);
+							break;
+						}
+					}
+					if (fire_flag == true)
+					{
+
+						Tex_Draw(pTexture, fire, FIRE_EFFECT_TEX);
+
+						if (character_is_right == true)
+						{
+							for (int count = 0; count < 4; count++)
+							{
+								fire[count].x += PLAYER_SPEED * 1.5;
+								fire[count].color -= 0x04000000;
+							}
+						}
+						else
+						{
+							for (int count = 0; count < 4; count++)
+							{
+								fire[count].x -= PLAYER_SPEED * 1.5;
+								fire[count].color -= 0x04000000;
+							}
+						}
+
+						if (fire[3].x >= 1280.0f || fire[0].x <= 0.0f)
+						{
+							fire_flag = false;
+						}
+					}
+					else
+					{
+						for (int count = 0; count < 4; count++)
+						{
+							fire[count] = player[count];
+						}
+
+						if (character_is_right == true)
+						{
+							//炎をプレイヤーからずらしている
+							fire[0].tu = 0.0f;
+							fire[1].tu = 1.0f;
+							fire[2].tu = 1.0f;
+							fire[3].tu = 0.0f;
+
+							fire[0].y = fire[0].y + 60.0f;
+							fire[1].y = fire[1].y + 60.0f;
+							fire[2].y = fire[2].y - 50.0f;
+							fire[3].y = fire[3].y - 50.0f;
+
+							fire[0].x = fire[0].x + 60.0f;
+							fire[1].x = fire[1].x + 60.0f;
+							fire[2].x = fire[2].x + 60.0f;
+							fire[3].x = fire[3].x + 60.0f;
+
+						}
+						else
+						{
+							fire[0].tu = 1.0f;
+							fire[1].tu = 0.0f;
+							fire[2].tu = 0.0f;
+							fire[3].tu = 1.0f;
+
+							fire[0].y = fire[0].y + 60.0f;
+							fire[1].y = fire[1].y + 60.0f;
+							fire[2].y = fire[2].y - 50.0f;
+							fire[3].y = fire[3].y - 50.0f;
+
+							fire[0].x = fire[0].x - 60.0f;
+							fire[1].x = fire[1].x - 60.0f;
+							fire[2].x = fire[2].x - 60.0f;
+							fire[3].x = fire[3].x - 60.0f;
+
+						}
+
+					}
+
+					Tex_Draw(pTexture, player, PLAYER_DASH_TEX);
+
 					
 					EndScene();
 					break;
 
 				case STAGE3:
 					BeginScene();
-
-					//Tex_Draw(pTexture, ground, GROUND_TEX);
-					//Tex_Draw(pTexture, back_ground_wall, BACKGROUND_TEX);
 
 					for (int count_i = 0; count_i < STAGE_WIDTH;count_i++)
 					{
@@ -462,7 +836,6 @@ void Render(void)
 							tmp_window_right[count_i][count_j].x += count_i * 320.0f;
 							tmp_husuma_left[count_i][count_j].x += count_i * 320.0f;
 							tmp_husuma_right[count_i][count_j].x += count_i * 320.0f;
-
 						}
 					}
 					
@@ -503,9 +876,9 @@ void Render(void)
 						}
 					}
 					
-					Transform_Draw_Thing(&thing);
+					Tex_Draw(pTexture, box, WHITE_TEX);
 
-
+					Transform_Draw_Thing(&thing, 1.0f);
 					EndScene();
 					break;
 			}
@@ -622,6 +995,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Tex_Load_EX(pTexture, "makimoo.png", MAKI_LEFT_TEX, 255, 255, 255, 255);
 	Tex_Load_EX(pTexture, "makikami.png", MAKI_MID_TEX, 255, 255, 255, 255);
 	Tex_Load_EX(pTexture, "maki3.png", MAKI_RIGHT_TEX, 255, 255, 255, 255);
+	Tex_Load_EX(pTexture, "fire.jpg", FIRE_EFFECT_TEX, 255, 0, 0, 0);
+	Tex_Load_EX(pTexture, "dash.png", PLAYER_DASH_TEX, 255, 0, 0, 0);
+	Tex_Load_EX(pTexture, "attack.png", PLAYER_ATTACK_TEX, 255, 0, 0, 0);
+
 	Tex_Load(pTexture, "white.png", WHITE_TEX);
 	Tex_Load(pTexture, "titlerogo2_cg3.jpg", TITLE_TEX);
 	Tex_Load(pTexture, "team_rogo_y.png", TEAM_LOGO_TEX);
@@ -630,6 +1007,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Tex_Load(pTexture, "stage3.bmp", STAGE3_TEX);
 	Tex_Load(pTexture, "haikei_all.png", BACKGROUND_TEX);
 	Tex_Load(pTexture, "zmen_a.png", GROUND_TEX);
+	Tex_Load(pTexture, "maki_back_ground.jpg", SELECT_BACK_GROUND);
+
 
 	//LPD3DXBUFFER	pMatBuf = NULL;
 

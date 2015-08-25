@@ -119,7 +119,7 @@ void Mesh_Load_FromX(LPTSTR xfilename, pTHING pThing, D3DXVECTOR3* pvecPosition)
  *
  * @param pThing THING型の構造体のポインタを渡す
  */
-void Set_Transform(THING* pThing);
+void Set_Transform(THING* pThing, float fScale);
 
 
 /**
@@ -144,4 +144,4 @@ void Draw_Thing(THING* pThing);
 *
 * @param pThing THING型の構造体のポインタを渡す
 */
-void Transform_Draw_Thing(THING* pThing);
+void Transform_Draw_Thing(THING* pThing,float fScale);
