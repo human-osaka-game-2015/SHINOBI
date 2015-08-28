@@ -15,8 +15,10 @@
 #define STAGE_WIDTH 102
 #define PLAYER_SPEED 20.0f
 
+#define PLAYER_CENTER 300.0f
 
-#define gravity 2.0
+#define gravity 5.0
+#define JUMP_POWER 60.0f
 
 enum STAGE
 {
@@ -37,33 +39,7 @@ enum STAGE
 #pragma comment(lib, "dxguid.lib")
 #define SAFE_RELEASE(p) {if(p){(p)->Release(); (p)=NULL;}}
 
-KEYSTATE Key[KEYMAX];
 
-bool maki_open = false;
-bool next_scene = false;
-bool fire_flag = false;
-bool character_is_right = true;
-
-int stage_num = STAGE1;
-
-bool sky_flag = false;
-
-#define JUMP_POWER 40.0f
-int Jump_Flag = 10;
-
-int game_time = 0;
-
-float g_v0 = 0.0f;
-float jump_v0 = JUMP_POWER;
-
-FLOAT eye_x = 0.0f;
-FLOAT eye_y = 0.0f;
-FLOAT eye_z = -1.0f;
-float fscale = 0.2f;
-//LPD3DXMESH			pMesh;	// メッシュデータ
-//DWORD				nMat;	// マテリアルの数
-//D3DMATERIAL9*			pMeshMat;	// マテリアル情報
-//LPDIRECT3DTEXTURE9*	pMeshTex;	// メッシュのテクスチャ
 
 
 
@@ -97,6 +73,32 @@ enum SCENE
 	GAMEOVER_SCENE,
 	MAX_SCENE
 } current_scene;
+
+KEYSTATE Key[KEYMAX];
+
+bool maki_open = false;
+bool next_scene = false;
+bool fire_flag = false;
+bool game_over_flag = false;
+
+FLOAT fPerspective = 4.0f;
+
+int stage_num = STAGE1;
+
+
+
+int Jump_Flag = 10;
+
+int game_time = 0;
+
+float g_v0 = 0.0f;
+float jump_v0 = JUMP_POWER;
+
+FLOAT eye_x = 0.0f;
+FLOAT eye_y = 0.0f;
+FLOAT eye_z = -1.0f;
+float fscale = 1.0f;
+
 
 //壁関係のCUSTOMVERTEX------------------------------------------------
 CUSTOMVERTEX ground[] =
@@ -177,20 +179,28 @@ CUSTOMVERTEX maki_right[] =
 	{ 180.0f, 670.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
 };
 
-CUSTOMVERTEX box[] =
+CUSTOMVERTEX collision_box[] =
 {
-	{ 540.0f, 500.0f, 0.5f, 1.0f, 0x66FFFFFF, 0.0f, 0.0f },
-	{ 735.0f, 500.0f, 0.5f, 1.0f, 0x66FFFFFF, 1.0f, 0.0f },
-	{ 735.0f, 620.0f, 0.5f, 1.0f, 0x66FFFFFF, 1.0f, 1.0f },
-	{ 540.0f, 620.0f, 0.5f, 1.0f, 0x66FFFFFF, 0.0f, 1.0f },
+	{ 540.0f, 540.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 0.0f },
+	{ 735.0f, 540.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 0.0f },
+	{ 735.0f, 700.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 1.0f },
+	{ 540.0f, 700.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 1.0f },
 };
 
 CUSTOMVERTEX player[] =
 {
-	{ 540.0f, 340.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
-	{ 735.0f, 340.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.25f, 0.0f },
-	{ 735.0f, 500.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.25f, 1.0f },
-	{ 540.0f, 500.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
+	{ PLAYER_CENTER - 100.0f, 340.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
+	{ PLAYER_CENTER	, 340.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.25f, 0.0f },
+	{ PLAYER_CENTER	, 590.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.25f, 1.0f },
+	{ PLAYER_CENTER - 100.0f, 590.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
+};
+
+CUSTOMVERTEX enemy[] =
+{
+	{ 840.0f, 340.0f, 0.5f, 1.0f, 0xFFFFFF66, 0.0f, 0.0f },
+	{ 935.0f, 340.0f, 0.5f, 1.0f, 0xFFFFFF66, 0.25f, 0.0f },
+	{ 935.0f, 590.0f, 0.5f, 1.0f, 0xFFFFFF66, 0.25f, 1.0f },
+	{ 840.0f, 590.0f, 0.5f, 1.0f, 0xFFFFFF66, 0.0f, 1.0f },
 };
 
 CUSTOMVERTEX fire[4];
@@ -222,8 +232,15 @@ void Init()
 	current_scene = SELECT_SCENE;
 }
 
+typedef struct
+{
+	bool sky_flag;
+	bool character_is_right;
+}STATE;
 
-
+STATE player_state = { false , true };
+STATE enemy_state = { false, true };
+STATE collision_box_state = { false, true };
 //-------------------------------------------------------------
 //
 //	制御処理
@@ -304,7 +321,7 @@ HRESULT Control(void)
 			KeyCheck_Dinput(&Key[RIGHT], DIK_RIGHT);
 			KeyCheck_Dinput(&Key[X], DIK_X);
 			KeyCheck_Dinput(&Key[Z], DIK_Z);
-
+			KeyCheck_Dinput(&Key[SPACE], DIK_SPACE);
 
 			if (Key[ENTER] == PUSH)
 			{
@@ -319,7 +336,7 @@ HRESULT Control(void)
 					player[1].tu = 0.25f;
 					player[2].tu = 0.25f;
 					player[3].tu = 0.0f;
-					character_is_right = true;
+					player_state.character_is_right = true;
 				}
 
 				game_time++;
@@ -340,12 +357,13 @@ HRESULT Control(void)
 					player[3].tu = 0.5f;
 				}
 
-				if (tmp_husuma_right[101][1].x >= 1280.0f && player[3].x == 540.0f)
+				if (tmp_husuma_right[101][1].x >= 1280.0f && player[3].x == PLAYER_CENTER)
 				{
 					for(int count_i = 0; count_i < 4; count_i++)
 					{
 						ground[count_i].x -= PLAYER_SPEED;
 						back_ground_wall[count_i].x -= PLAYER_SPEED;
+						enemy[count_i].x -= PLAYER_SPEED;
 					}
 				}
 				else if (player[2].x <= 1280.0f)
@@ -376,7 +394,7 @@ HRESULT Control(void)
 					player[1].tu = 0.0f;
 					player[2].tu = 0.0f;
 					player[3].tu = 0.25f;
-					character_is_right = false;
+					player_state.character_is_right = false;
 				}
 
 				game_time++;
@@ -396,12 +414,14 @@ HRESULT Control(void)
 					player[2].tu = 0.5f;
 					player[3].tu = 0.75f;
 				}
-				if (tmp_ground[0][0].x <= 0.0f && player[3].x == 540.0f)
+				if (tmp_ground[0][0].x <= 0.0f && player[3].x == PLAYER_CENTER)
 				{
 					for (int count_i = 0; count_i < 4; count_i++)
 					{
 						ground[count_i].x += PLAYER_SPEED;
 						back_ground_wall[count_i].x += PLAYER_SPEED;
+						enemy[count_i].x += PLAYER_SPEED;
+
 					}
 				}
 				else if (player[0].x >= 0.0f)
@@ -425,8 +445,8 @@ HRESULT Control(void)
 
 			if (player[2].y < ground[2].y - 20.0f)
 			{
-				sky_flag = true;
-				if (character_is_right == true)
+				player_state.sky_flag = true;
+				if (player_state.character_is_right == true)
 				{
 					player[0].tu = 0.75f;
 					player[1].tu = 1.0f;
@@ -443,13 +463,28 @@ HRESULT Control(void)
 				}
 			}
 
-			if (Key[UP] == PUSH && sky_flag == false)
+			if (enemy[2].y < ground[2].y - 20.0f)
+			{
+				enemy_state.sky_flag = true;
+			}
+
+			if (player[2].y < ground[2].y - 20.0f)
+			{
+				player_state.sky_flag = true;
+			}
+
+
+			if (Key[UP] == PUSH /*&& player_state.sky_flag == false*/)
 			{
 				Jump_Flag = 1;
 			}
 
+			if (Key[SPACE] == PUSH /*&& player_state.sky_flag == false*/)
+			{
+				Jump_Flag = 2;
+			}
 
-			if (sky_flag == true && Jump_Flag == 10)
+			if (player_state.sky_flag == true && Jump_Flag == 10)
 			{
 				g_v0 += gravity;
 				for (int count = 0; count < 4; count++)
@@ -466,10 +501,11 @@ HRESULT Control(void)
 					{
 						player[count].y -= maegin;
 					}
-					sky_flag = false;
+
+   					player_state.sky_flag = false;
 					g_v0 = 0.0f;
 					jump_v0 = JUMP_POWER;
-					if (character_is_right == true)
+					if (player_state.character_is_right == true)
 					{
 						player[0].tu = 0.0f;
 						player[1].tu = 0.25f;
@@ -482,10 +518,33 @@ HRESULT Control(void)
 						player[1].tu = 0.0f;
 						player[2].tu = 0.0f;
 						player[3].tu = 0.25f;
-
 					}
 				}
 			}
+
+			if (enemy_state.sky_flag == true)
+			{
+				g_v0 += gravity;
+				for (int count = 0; count < 4; count++)
+				{
+					enemy[count].y += g_v0;
+				}
+
+				if (enemy[2].y >= ground[2].y - 20.0f)
+				{
+					//地面に入りこんだ差
+					float maegin = 0;
+					maegin = enemy[2].y - (ground[2].y - 20.0f);
+					for (int count = 0; count < 4; count++)
+					{
+						enemy[count].y -= maegin;
+					}
+					enemy_state.sky_flag = false;
+					g_v0 = 0.0f;
+					jump_v0 = JUMP_POWER;
+				}
+			}
+
 
 			if (Jump_Flag == 1)
 			{
@@ -500,6 +559,21 @@ HRESULT Control(void)
 				{
 					Jump_Flag = 10;
 				}
+			}
+
+			if (Jump_Flag == 2)
+			{
+				for (int count = 0; count < 4; count++)
+				{
+					player[count].y -= jump_v0 + 10.0f;
+				}
+
+				jump_v0 -= gravity;
+
+				if (jump_v0 < 0)
+				{
+					Jump_Flag = 10;
+				}
 
 			}
 
@@ -507,14 +581,150 @@ HRESULT Control(void)
 			{
 				fire_flag = true;
 			}
+			//敵が一定範囲に近づいてきたら、追跡してくる処理
+			if (enemy[0].x - player[1].x < 400.0f && enemy[0].x - player[1].x > 0.0f)
+			{
+				int i = 0;
+				i = enemy[0].x - player[1].x;
+				for (int count = 0; count <= 4; count++)
+				{
+					enemy[count].x -= PLAYER_SPEED - 10.0f;
+				}
+			}
+
+			if (player[0].x - enemy[1].x < 400.0f && player[0].x - enemy[1].x > 0.0f)
+			{
+				int i = 0;
+				i = enemy[0].x - player[1].x;
+				for (int count = 0; count <= 4; count++)
+				{
+					enemy[count].x += PLAYER_SPEED - 10.0f;
+				}
+			}
+
+
 
 			break;
 
 		case STAGE3:
 			KeyCheck_Dinput(&Key[ENTER], DIK_RETURN);
+			KeyCheck_Dinput(&Key[RIGHT], DIK_RIGHT);
+			KeyCheck_Dinput(&Key[LEFT], DIK_LEFT);
+			KeyCheck_Dinput(&Key[UP], DIK_UP);
+			KeyCheck_Dinput(&Key[DOWN], DIK_DOWN);
+			KeyCheck_Dinput(&Key[SPACE], DIK_SPACE);
+
 			if (Key[ENTER] == PUSH)
 			{
 				current_scene = SELECT_SCENE;
+			}
+
+			if (Key[RIGHT] == ON)
+			{
+				//thing.vecPosition.x += 0.1f;
+				if (tmp_husuma_right[101][1].x >= 1280.0f /*&& player[3].x == PLAYER_CENTER*/)
+				{
+					for (int count_i = 0; count_i < 4; count_i++)
+					{
+						ground[count_i].x -= PLAYER_SPEED;
+						back_ground_wall[count_i].x -= PLAYER_SPEED;
+					}
+				}
+			}
+
+			if (Key[LEFT] == ON)
+			{
+				//thing.vecPosition.x -= 0.1f;
+				if (tmp_ground[0][0].x <= 0.0f /*&& player[3].x == PLAYER_CENTER*/)
+				{
+					for (int count_i = 0; count_i < 4; count_i++)
+					{
+						ground[count_i].x += PLAYER_SPEED;
+						back_ground_wall[count_i].x += PLAYER_SPEED;
+					}
+				}
+			}
+
+			if (collision_box[2].y < ground[2].y - 20.0f)
+			{
+				collision_box_state.sky_flag = true;
+			}
+
+			if (Key[UP] == PUSH /*&& player_state.sky_flag == false*/)
+			{
+				Jump_Flag = 3;
+			}
+
+			if (Key[SPACE] == PUSH /*&& player_state.sky_flag == false*/)
+			{
+				Jump_Flag = 4;
+			}
+
+			if (Jump_Flag == 10 && eye_y > 0.0f)
+			{
+				eye_y -= 0.05;
+			}
+
+			if (eye_y < 0.0f)
+			{
+				eye_y = 0.0f;
+			}
+
+			if (collision_box_state.sky_flag == true && Jump_Flag == 10)
+			{
+				g_v0 += gravity;
+				for (int count = 0; count < 4; count++)
+				{
+					collision_box[count].y += g_v0;
+				}
+				
+				if (collision_box[2].y >= ground[2].y - 20.0f)
+				{
+					//地面に入りこんだ差
+					float maegin = 0;
+					maegin = collision_box[2].y - (ground[2].y - 20.0f);
+					for (int count = 0; count < 4; count++)
+					{
+						collision_box[count].y -= maegin;
+					}
+
+					collision_box_state.sky_flag = false;
+					g_v0 = 0.0f;
+					jump_v0 = JUMP_POWER;
+				}
+			}
+
+
+			if (Jump_Flag == 3)
+			{
+				for (int count = 0; count < 4; count++)
+				{
+					collision_box[count].y -= jump_v0;
+				}
+					eye_y += jump_v0 / 700.0f;
+
+				jump_v0 -= gravity;
+				
+				if (jump_v0 < 0)
+				{
+					Jump_Flag = 10;
+				}
+			}
+
+			if (Jump_Flag == 4)
+			{
+				for (int count = 0; count < 4; count++)
+				{
+					collision_box[count].y -= jump_v0 + 10.0f;
+				}
+					eye_y += jump_v0 / 530.0f;
+
+				jump_v0 -= gravity;
+				if (jump_v0 < 0)
+				{
+					Jump_Flag = 10;
+				}
+
 			}
 
 			break;
@@ -725,7 +935,7 @@ void Render(void)
 
 						Tex_Draw(pTexture, fire, FIRE_EFFECT_TEX);
 
-						if (character_is_right == true)
+						if (player_state.character_is_right == true)
 						{
 							for (int count = 0; count < 4; count++)
 							{
@@ -742,7 +952,7 @@ void Render(void)
 							}
 						}
 
-						if (fire[3].x >= 1280.0f || fire[0].x <= 0.0f)
+						if (fire[3].x >= 1280.0f || fire[1].x <= 0.0f)
 						{
 							fire_flag = false;
 						}
@@ -754,7 +964,7 @@ void Render(void)
 							fire[count] = player[count];
 						}
 
-						if (character_is_right == true)
+						if (player_state.character_is_right == true)
 						{
 							//炎をプレイヤーからずらしている
 							fire[0].tu = 0.0f;
@@ -794,6 +1004,7 @@ void Render(void)
 
 					}
 
+					Tex_Draw(pTexture, enemy, PLAYER_DASH_TEX);
 					Tex_Draw(pTexture, player, PLAYER_DASH_TEX);
 
 					
@@ -876,7 +1087,7 @@ void Render(void)
 						}
 					}
 					
-					Tex_Draw(pTexture, box, WHITE_TEX);
+					Tex_Draw(pTexture, collision_box, WHITE_TEX);
 
 					Transform_Draw_Thing(&thing, 1.0f);
 					EndScene();
@@ -1012,7 +1223,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	//LPD3DXBUFFER	pMatBuf = NULL;
 
-	Mesh_Load_FromX("Tomato.x", &thing, &D3DXVECTOR3(0.0f, -3.5f, 9.0f));
+	Mesh_Load_FromX("Tomato.x", &thing, &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
 
 	RenderSet();
 	// Zバッファー処理を有効にする

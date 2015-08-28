@@ -184,7 +184,6 @@ void Set_Transform(THING* pThing,float fScale)
 void Set_View_Light(FLOAT Eye_x, FLOAT Eye_y, FLOAT Eye_z)
 {
 	// ビュートランスフォーム（視点座標変換）
-
 	D3DXVECTOR3 vecEyePt(Eye_x, Eye_y, Eye_z); //カメラ（視点）位置
 	D3DXVECTOR3 vecLookatPt(0.0f, 0.0f, 0.0f);//注視位置
 	D3DXVECTOR3 vecUpVec(0.0f, 1.0f, 0.0f);//上方位置
@@ -193,7 +192,7 @@ void Set_View_Light(FLOAT Eye_x, FLOAT Eye_y, FLOAT Eye_z)
 	pD3Device->SetTransform(D3DTS_VIEW, &matView);
 	// プロジェクショントランスフォーム（射影変換）
 	D3DXMATRIXA16 matProj;
-	D3DXMatrixPerspectiveFovLH(&matProj, D3DX_PI / 4, 1.0f, 1.0f, 100.0f);
+	D3DXMatrixPerspectiveFovLH(&matProj, D3DX_PI / 4.0f, 1.0f, 1.0f, 100.0f);
 	pD3Device->SetTransform(D3DTS_PROJECTION, &matProj);
 	// ライトをあてる 白色で鏡面反射ありに設定
 	D3DXVECTOR3 vecDirection(1, 1, 1);
@@ -229,8 +228,7 @@ void Transform_Draw_Thing(THING* pThing,float fScale)
 	//ワールドトランスフォーム（絶対座標変換）
 	D3DXMATRIXA16 matWorld, matPosition, matScale;
 	D3DXMatrixIdentity(&matWorld);
-	D3DXMatrixTranslation(&matPosition, pThing->vecPosition.x, pThing->vecPosition.y,
-		pThing->vecPosition.z);
+	D3DXMatrixTranslation(&matPosition, pThing->vecPosition.x, pThing->vecPosition.y,pThing->vecPosition.z);
 	D3DXMatrixMultiply(&matWorld, &matWorld, &matPosition);
 
 	D3DXMatrixScaling(&matScale, fScale, fScale, fScale);
