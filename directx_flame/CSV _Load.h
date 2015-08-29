@@ -1,9 +1,9 @@
+#pragma once
 #include <stdio.h>
 #include <stdlib.h>
 #include "dx.render_lib.h"
 
-#pragma once
-extern int stage_state[110];
+extern int stage_state[];
 
 enum STAGE_STATE
 {

@@ -71,8 +71,12 @@
     <ClCompile Include="dinput_lib.cpp" />
     <ClCompile Include="directx_lib.cpp" />
     <ClCompile Include="dx.render_lib.cpp" />
+    <ClCompile Include="game.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="select.cpp" />
     <ClCompile Include="Sound.cpp" />
+    <ClCompile Include="Stage_Render.cpp" />
+    <ClCompile Include="title.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CSV _Load.h" />
@@ -80,6 +84,8 @@
     <ClInclude Include="directx_lib.h" />
     <ClInclude Include="dx.render_lib.h" />
     <ClInclude Include="d_sound.h" />
+    <ClInclude Include="main.h" />
+    <ClInclude Include="Stage_Render.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
