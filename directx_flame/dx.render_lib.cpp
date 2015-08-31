@@ -8,14 +8,14 @@ D3DPRESENT_PARAMETERS d3dpp;		//	パラメーター
 
 
 
-void Vertex_Spin(CUSTOMVERTEX* vertex,float spin_speed)
+void Vertex_Spin(CUSTOMVERTEX* vertex, float spin_speed, CUSTOMVERTEX* temp)
 {
 	D3DXToRadian(spin_speed);
 	for (int i = 0; i < 4; i++)
 	{
-		CUSTOMVERTEX temp = vertex[i];
-		vertex[i].x = temp.x * cos(spin_speed) - temp.y * sin(spin_speed);
-		vertex[i].y = temp.x * sin(spin_speed) + temp.y * cos(spin_speed);
+		vertex[i] = temp[i];
+		vertex[i].x = temp[i].x * cos(spin_speed) - temp[i].y * sin(spin_speed);
+		vertex[i].y = temp[i].x * sin(spin_speed) + temp[i].y * cos(spin_speed);
 	}
 }
 

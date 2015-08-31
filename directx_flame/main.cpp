@@ -124,6 +124,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Tex_Load_EX(pTexture, "fire.jpg", FIRE_EFFECT_TEX, 255, 0, 0, 0);
 	Tex_Load_EX(pTexture, "dash.png", PLAYER_DASH_TEX, 255, 0, 0, 0);
 	Tex_Load_EX(pTexture, "attack.png", PLAYER_ATTACK_TEX, 255, 0, 0, 0);
+	Tex_Load_EX(pTexture, "shuriken.bmp", SHURIKEN_TEX, 255, 255, 255, 255);
 
 	Tex_Load(pTexture, "white.png", WHITE_TEX);
 	Tex_Load(pTexture, "titlerogo2_cg3.jpg", TITLE_TEX);
@@ -138,8 +139,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	//LPD3DXBUFFER	pMatBuf = NULL;
 
-	Mesh_Load_FromX("shinobi.x", &thing[0], &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
-	Mesh_Load_FromX("cannon.x", &thing[1], &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
+	//Mesh_Load_FromX("shinobi.x", &thing[0], &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
+	//Mesh_Load_FromX("cannon.x", &thing[1], &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
 
 	RenderSet();
 	// Zバッファー処理を有効にする

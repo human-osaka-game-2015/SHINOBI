@@ -91,7 +91,7 @@ void RenderSet(void);
 *@param *vertex CUSTOMVERTEXの名前をポインタで渡す
 *@param spin_speed マイナスが左回転・プラスが右回転
 */
-void Vertex_Spin(CUSTOMVERTEX* vertex, float spin_speed);
+void Vertex_Spin(CUSTOMVERTEX* vertex, float spin_speed, CUSTOMVERTEX* temp);
 
 
 

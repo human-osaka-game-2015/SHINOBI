@@ -3,11 +3,16 @@
 
 #define STAGE_WIDTH 102
 #define PLAYER_SPEED 20.0f
-
 #define PLAYER_CENTER 300.0f
 
 #define gravity 5.0
 #define JUMP_POWER 60.0f
+
+
+#define SHURIKEN_SIZE 50.0f
+#define SHURIKEN_SPEED 30
+#define RAD 5
+
 
 typedef struct
 {
@@ -57,6 +62,16 @@ CUSTOMVERTEX back_ground[] =
 
 CUSTOMVERTEX fire[4];
 
+CUSTOMVERTEX shuriken[]=
+{
+	{ -SHURIKEN_SIZE, -SHURIKEN_SIZE, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
+	{ SHURIKEN_SIZE, -SHURIKEN_SIZE, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
+	{ SHURIKEN_SIZE, SHURIKEN_SIZE, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
+	{ -SHURIKEN_SIZE, SHURIKEN_SIZE, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
+};
+
+CUSTOMVERTEX shuriken_tmp[4];
+
 STATE player_state = { false, true };
 STATE enemy_state = { false, true };
 STATE collision_box_state = { false, true };
@@ -75,6 +90,16 @@ int stage_num = STAGE1;
 extern KEYSTATE Key[KEYMAX];
 extern int current_scene;
 extern THING thing[2];
+
+float rad = RAD;
+bool shuriken_flag = false;
+bool link_flag = true;
+bool right_purasu_flag = false;
+float Spos_x1 = 0;
+float Spos_y1 = 0;
+int Spos_x = 0;
+int Spos_y = 0;
+
 
 
 void Game_Scene_Control(pTHING pThing)
@@ -99,6 +124,49 @@ void Game_Scene_Control(pTHING pThing)
 		KeyCheck_Dinput(&Key[X], DIK_X);
 		KeyCheck_Dinput(&Key[Z], DIK_Z);
 		KeyCheck_Dinput(&Key[SPACE], DIK_SPACE);
+		KeyCheck_Dinput(&Key[S], DIK_S);
+		
+		if (Key[S] == PUSH&&shuriken_flag == false)
+		{
+			shuriken_flag = true;
+			if (player_state.character_is_right == true)
+			{
+				right_purasu_flag = true;
+			}
+			else
+			{
+				right_purasu_flag = false;
+			}
+		}
+
+		if (shuriken_flag == true)
+		{
+			if (link_flag == true)
+			{
+				if (player_state.character_is_right == true)
+				{
+					Spos_x1 += player[1].x;
+					Spos_y1 += player[1].y;
+				}
+				if (player_state.character_is_right == false)
+				{
+					Spos_x1 += player[0].x;
+					Spos_y1 += player[0].y;
+				}
+				link_flag = false;
+			}
+			rad += 5;
+			if (right_purasu_flag == true)
+			{
+				Spos_x += SHURIKEN_SPEED;
+			}
+
+			if (right_purasu_flag == false)
+			{
+				Spos_x -= SHURIKEN_SPEED;
+			}
+
+		}
 
 		if (Key[ENTER] == PUSH)
 		{
@@ -610,6 +678,30 @@ void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture,pTHING pThing)
 
 			}
 
+		}
+
+
+		Vertex_Spin(shuriken_tmp, rad, shuriken);
+
+		for (int i = 0; i < 4; i++)
+		{
+			//shuriken_tmp[i].x += player[1].x;
+			shuriken_tmp[i].y += Spos_y1;
+			shuriken_tmp[i].x = shuriken_tmp[i].x + Spos_x + Spos_x1;
+		}
+
+		if (shuriken_tmp[0].x <= 1400.0f&&shuriken_tmp[0].x >= -30.0f&&shuriken_flag == true)
+		{
+			Tex_Draw(pTexture, shuriken_tmp, SHURIKEN_TEX);
+		}
+		else
+		{
+			shuriken_flag = false;
+			link_flag = true;
+			Spos_x1 = 0;
+			Spos_y1 = 0;
+			Spos_x = 0;
+			rad = 0;
 		}
 
 		Tex_Draw(pTexture, enemy, PLAYER_DASH_TEX);
