@@ -54,7 +54,8 @@ bool game_over_flag = false;
 
 LPDIRECT3DTEXTURE9 pTexture[TEXMAX];	//	画像の情報を入れておく為のポインタ配列
 
-THING thing[2];
+THING thing[THING_MAX];
+
 
 
 //-------------------------------------------------------------
@@ -139,8 +140,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	//LPD3DXBUFFER	pMatBuf = NULL;
 
-	//Mesh_Load_FromX("shinobi.x", &thing[0], &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
-	//Mesh_Load_FromX("cannon.x", &thing[1], &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
+	Mesh_Load_FromX("shinobi.x", &thing[SHINOBI_THING], &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
+	Mesh_Load_FromX("tomato.x", &thing[TOMATO_THING], &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
+	Mesh_Load_FromX("cannon.x", &thing[CANNON_THING], &D3DXVECTOR3(8.0f, -6.0f, 9.0f));
+
 
 	RenderSet();
 	// Zバッファー処理を有効にする

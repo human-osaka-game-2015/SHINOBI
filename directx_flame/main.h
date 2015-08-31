@@ -1,5 +1,6 @@
 #ifndef SCENE_H
 #define SCENE_H
+#define P_HIGHT -3.0f
 #include "dx.render_lib.h"
 #include "dinput_lib.h"
 #include "CSV _Load.h"
@@ -18,6 +19,14 @@ void Select_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture);
 
 void Game_Scene_Control(pTHING pThing);
 void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture, pTHING pThing);
+
+enum THING_MESH
+{
+	SHINOBI_THING,
+	TOMATO_THING,
+	CANNON_THING,
+	THING_MAX
+};
 
 enum TEXTURE
 {
