@@ -66,15 +66,18 @@ STATE collision_box_state = { false, true };
 int game_time = 0;
 int Jump_Flag = 10;
 float g_v0 = 0.0f;
+float thing_gravity = 0.05f;
 float jump_v0 = JUMP_POWER;
 bool fire_flag = false;
+bool rend_flag = false;
 float fscale = 1.0f;
 int stage_num = STAGE1;
 extern KEYSTATE Key[KEYMAX];
 extern int current_scene;
+extern THING thing[2];
 
 
-void Game_Scene_Control()
+void Game_Scene_Control(pTHING pThing)
 {
 	switch (stage_num)
 	{
@@ -387,11 +390,25 @@ void Game_Scene_Control()
 		KeyCheck_Dinput(&Key[UP], DIK_UP);
 		KeyCheck_Dinput(&Key[DOWN], DIK_DOWN);
 		KeyCheck_Dinput(&Key[SPACE], DIK_SPACE);
+		KeyCheck_Dinput(&Key[A], DIK_A);
+		KeyCheck_Dinput(&Key[S], DIK_S);
+
 
 		if (Key[ENTER] == PUSH)
 		{
 			current_scene = SELECT_SCENE;
 		}
+
+		if (Key[A] == PUSH)
+		{
+			rend_flag = true;
+		}
+
+		if (Key[S] == PUSH)
+		{
+			rend_flag = false;
+		}
+
 
 		if (Key[RIGHT] == ON)
 		{
@@ -434,14 +451,16 @@ void Game_Scene_Control()
 			Jump_Flag = 4;
 		}
 
-		if (Jump_Flag == 10 && eye_y > 0.0f)
+		if (Jump_Flag == 10 && thing[0].vecPosition.y > -3.0f)
 		{
-			eye_y -= 0.05;
+			thing[0].vecPosition.y -= thing_gravity;
+			thing_gravity *= 1.3f;
 		}
 
-		if (eye_y < 0.0f)
+		if (thing[0].vecPosition.y < -3.0f)
 		{
-			eye_y = 0.0f;
+			thing[0].vecPosition.y = -3.0f;
+			thing_gravity = 0.05f;
 		}
 
 		if (collision_box_state.sky_flag == true && Jump_Flag == 10)
@@ -475,7 +494,7 @@ void Game_Scene_Control()
 			{
 				collision_box[count].y -= jump_v0;
 			}
-			eye_y += jump_v0 / 700.0f;
+			thing[0].vecPosition.y += jump_v0 / 120.0f;
 
 			jump_v0 -= gravity;
 
@@ -491,7 +510,7 @@ void Game_Scene_Control()
 			{
 				collision_box[count].y -= jump_v0 + 10.0f;
 			}
-			eye_y += jump_v0 / 530.0f;
+			thing[0].vecPosition.y += jump_v0 / 130.0f;
 
 			jump_v0 -= gravity;
 			if (jump_v0 < 0)
@@ -607,15 +626,17 @@ void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture,pTHING pThing)
 
 		Tex_Draw(pTexture, collision_box, WHITE_TEX);
 
-		Transform_Draw_Thing(pThing, 1.0f);
+		if (rend_flag == false)
+		{
+			Transform_Draw_Thing(&pThing[0], 1.0f);
+		}
+		else
+		{
+			Transform_Draw_Thing(&pThing[1], 1.0f);
+		}
 		EndScene();
 		break;
 	}
 
 }
 
-void Game_Scene(LPDIRECT3DTEXTURE9 *pTexture , pTHING pThing)
-{
-	Game_Scene_Control();
-	Game_Scene_Render(pTexture, pThing);
-}

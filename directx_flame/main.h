@@ -16,7 +16,7 @@ void Title_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture);
 void Select_Scene_Control();
 void Select_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture);
 
-void Game_Scene_Control();
+void Game_Scene_Control(pTHING pThing);
 void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture, pTHING pThing);
 
 enum TEXTURE
