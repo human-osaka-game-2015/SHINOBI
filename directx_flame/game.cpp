@@ -21,6 +21,7 @@ typedef struct
 	bool character_is_right;
 }STATE;
 
+
 enum STAGE
 {
 	STAGE1 = 1,
@@ -47,18 +48,18 @@ CUSTOMVERTEX enemy[] =
 
 CUSTOMVERTEX collision_box[] =
 {
-	{ 540.0f, 340.0f, 0.5f, 1.0f, 0x55FFFFFF, 0.0f, 0.0f },
-	{ 735.0f, 340.0f, 0.5f, 1.0f, 0x55FFFFFF, 1.0f, 0.0f },
-	{ 735.0f, 500.0f, 0.5f, 1.0f, 0x55FFFFFF, 1.0f, 1.0f },
-	{ 540.0f, 500.0f, 0.5f, 1.0f, 0x55FFFFFF, 0.0f, 1.0f },
+	{ 540.0f, 340.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 0.0f },
+	{ 735.0f, 340.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 0.0f },
+	{ 735.0f, 500.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 1.0f },
+	{ 540.0f, 500.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 1.0f },
 };
 
 CUSTOMVERTEX collision_cannon[] =
 {
-	{ 1050.0f, 430.0f, 0.5f, 1.0f, 0x55FFFFFF, 0.0f, 0.0f },
-	{ 1615.0f, 430.0f, 0.5f, 1.0f, 0x55FFFFFF, 1.0f, 0.0f },
-	{ 1615.0f, 650.0f, 0.5f, 1.0f, 0x55FFFFFF, 1.0f, 1.0f },
-	{ 1050.0f, 650.0f, 0.5f, 1.0f, 0x55FFFFFF, 0.0f, 1.0f },
+	{ 1050.0f, 430.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 0.0f },
+	{ 1615.0f, 430.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 0.0f },
+	{ 1615.0f, 650.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 1.0f },
+	{ 1050.0f, 650.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 1.0f },
 };
 
 CUSTOMVERTEX back_ground[] =
@@ -85,6 +86,9 @@ STATE player_state = { false, true };
 STATE enemy_state = { false, true };
 STATE collision_box_state = { false, true };
 
+THING2D_POS shinobi_pos;
+THING2D_POS tomato_pos;
+THING2D_POS cannon_pos;
 
 //•Ï”éŒ¾
 int game_time = 0;
@@ -518,7 +522,30 @@ void Game_Scene_Control(pTHING pThing)
 			jump_v0 = JUMP_POWER;
 			thing_gravity = 0.05f;
 			thing[SHINOBI_THING].vecPosition.y = -0.5f;
-
+		}
+		else if (collision_box[2].y > collision_cannon[0].y && collision_box[1].x > collision_cannon[0].x && collision_box[0].x <= collision_cannon[0].x)
+		{
+			under_hit_flag = true;
+			collision_box_state.sky_flag = false;
+			g_v0 = 0.0f;
+			jump_v0 = JUMP_POWER;
+			thing_gravity = 0.05f;
+			if (thing[SHINOBI_THING].vecPosition.y != -3.0f)
+			{
+				thing[SHINOBI_THING].vecPosition.y = -0.5f;
+			}
+		}
+		else if (collision_box[2].y > collision_cannon[0].y && collision_box[3].x < collision_cannon[1].x && collision_box[1].x >= collision_cannon[1].x)
+		{
+			under_hit_flag = true;
+			collision_box_state.sky_flag = false;
+			g_v0 = 0.0f;
+			jump_v0 = JUMP_POWER;
+			thing_gravity = 0.05f;
+			if (thing[SHINOBI_THING].vecPosition.y != -3.0f)
+			{
+				thing[SHINOBI_THING].vecPosition.y = -0.5f;
+			}
 		}
 		else
 		{
@@ -565,23 +592,23 @@ void Game_Scene_Control(pTHING pThing)
 			Jump_Flag = 3;
 		}
 
-		if (Key[SPACE] == PUSH)
-		{
-			Jump_Flag = 4;
-		}
+		//if (Key[SPACE] == PUSH)
+		//{
+		//	Jump_Flag = 4;
+		//}
 
 
 
 		if (collision_box_state.sky_flag == true && Jump_Flag == 10 && under_hit_flag == false)
 		{
 			g_v0 += gravity;
-			thing[0].vecPosition.y -= thing_gravity;
+			//thing[0].vecPosition.y -= thing_gravity;
 			thing_gravity *= 1.5f;
 
-			for (int count = 0; count < 4; count++)
-			{
-				collision_box[count].y += g_v0;
-			}
+			//for (int count = 0; count < 4; count++)
+			//{
+			//	collision_box[count].y += g_v0;
+			//}
 		}
 			if (collision_box[2].y >= GROUND_COLLISION)
 			{
@@ -598,11 +625,11 @@ void Game_Scene_Control(pTHING pThing)
 				jump_v0 = JUMP_POWER;
 			}
 
-		//if (Jump_Flag == 10 && thing[0].vecPosition.y > P_HIGHT)
-		//{
-		//	thing[0].vecPosition.y -= thing_gravity;
-		//	thing_gravity *= 1.5f;
-		//}
+		if (Jump_Flag == 10 && thing[0].vecPosition.y > P_HIGHT)
+		{
+			thing[0].vecPosition.y -= thing_gravity;
+			//thing_gravity *= 1.5f;
+		}
 
 		if (thing[0].vecPosition.y < P_HIGHT)
 		{
@@ -612,10 +639,10 @@ void Game_Scene_Control(pTHING pThing)
 
 		if (Jump_Flag == 3)
 		{
-			for (int count = 0; count < 4; count++)
-			{
-				collision_box[count].y -= jump_v0;
-			}
+			//for (int count = 0; count < 4; count++)
+			//{
+			//	collision_box[count].y -= jump_v0;
+			//}
 			thing[0].vecPosition.y += jump_v0 / 80.0f;
 
 			jump_v0 -= gravity;
@@ -626,20 +653,6 @@ void Game_Scene_Control(pTHING pThing)
 			}
 		}
 
-		//if (Jump_Flag == 4)
-		//{
-		//	for (int count = 0; count < 4; count++)
-		//	{
-		//		collision_box[count].y -= jump_v0 + 10.0f;
-		//	}
-		//	thing[0].vecPosition.y += jump_v0 / 50.0f;
-
-		//	jump_v0 -= gravity;
-		//	if (jump_v0 < 0)
-		//	{
-		//		Jump_Flag = 10;
-		//	}
-		//}
 		break;
 	}
 }
@@ -768,21 +781,40 @@ void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture,pTHING pThing)
 	case STAGE3:
 		BeginScene();
 
+		collision_box[0].x = shinobi_pos.thing_posx - 100.0f;
+		collision_box[0].y = shinobi_pos.thing_posy - 100.0f;
+		collision_box[1].x = shinobi_pos.thing_posx + 100.0f;
+		collision_box[1].y = shinobi_pos.thing_posy - 100.0f;
+		collision_box[2].x = shinobi_pos.thing_posx + 100.0f;
+		collision_box[2].y = shinobi_pos.thing_posy + 30.0f;
+		collision_box[3].x = shinobi_pos.thing_posx - 100.0f;
+		collision_box[3].y = shinobi_pos.thing_posy + 30.0f;
+
+		collision_cannon[0].x = cannon_pos.thing_posx - 200.0f;
+		collision_cannon[0].y = cannon_pos.thing_posy - 200.0f;
+		collision_cannon[1].x = cannon_pos.thing_posx + 250.0f;
+		collision_cannon[1].y = cannon_pos.thing_posy - 200.0f;
+		collision_cannon[2].x = cannon_pos.thing_posx + 250.0f;
+		collision_cannon[2].y = cannon_pos.thing_posy + 30.0f;
+		collision_cannon[3].x = cannon_pos.thing_posx - 200.0f;
+		collision_cannon[3].y = cannon_pos.thing_posy + 30.0f;
+
+
 		Stage_Render(pTexture);
 
 		Tex_Draw(pTexture, collision_box, WHITE_TEX);
 
 		Tex_Draw(pTexture, collision_cannon, WHITE_TEX);
 
-		Transform_Draw_Thing(&pThing[CANNON_THING], 0.1f);
+		Transform_Draw_Thing(&pThing[CANNON_THING], 0.1f,&cannon_pos);
 
 		if (rend_flag == false)
 		{
-			Transform_Draw_Thing(&pThing[SHINOBI_THING], 1.0f);
+			Transform_Draw_Thing(&pThing[SHINOBI_THING], 1.0f,&shinobi_pos);
 		}
 		else
 		{
-			Transform_Draw_Thing(&pThing[TOMATO_THING], 1.0f);
+			Transform_Draw_Thing(&pThing[TOMATO_THING], 1.0f,&tomato_pos);
 		}
 		EndScene();
 		break;

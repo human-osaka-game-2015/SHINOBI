@@ -141,7 +141,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	//LPD3DXBUFFER	pMatBuf = NULL;
 
 	Mesh_Load_FromX("shinobi.x", &thing[SHINOBI_THING], &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
-	Mesh_Load_FromX("tomato.x", &thing[TOMATO_THING], &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
+	Mesh_Load_FromX("dash_left.x", &thing[TOMATO_THING], &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
 	Mesh_Load_FromX("cannon.x", &thing[CANNON_THING], &D3DXVECTOR3(8.0f, -6.0f, 9.0f));
 
 
@@ -216,6 +216,18 @@ void Control()
 
 
 	case GAME_SCENE:
+		KeyCheck_Dinput(&Key[Q], DIK_Q);
+		KeyCheck_Dinput(&Key[W], DIK_W);
+		if (Key[Q] == ON)
+		{
+			eye_z += 0.1f;
+		}
+
+		if (Key[W] == ON)
+		{
+			eye_z -= 0.1f;
+		}
+
 		Game_Scene_Control(thing);
 		break;
 

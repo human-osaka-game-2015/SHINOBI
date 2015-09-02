@@ -24,6 +24,11 @@ typedef struct _THING
 
 }THING,*pTHING;
 
+typedef struct THING_POS
+{
+	FLOAT thing_posx;
+	FLOAT thing_posy;
+}THING2D_POS;
 
 struct CUSTOMVERTEX
 {
@@ -144,4 +149,4 @@ void Draw_Thing(THING* pThing);
 *
 * @param pThing THING型の構造体のポインタを渡す
 */
-void Transform_Draw_Thing(THING* pThing,float fScale);
+void Transform_Draw_Thing(THING* pThing, float fScale, THING2D_POS* posxy);

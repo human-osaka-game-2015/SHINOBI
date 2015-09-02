@@ -5,11 +5,15 @@ IDirect3DDevice9*	pD3Device;		//	Direct3Dのデバイス
 
 D3DPRESENT_PARAMETERS d3dpp;		//	パラメーター
 
+D3DXMATRIXA16 matView;
+D3DXMATRIXA16 matProj;
 
+D3DXMATRIXA16 portPos, displayPos;
 
 
 void Vertex_Spin(CUSTOMVERTEX* vertex, float spin_speed, CUSTOMVERTEX* temp)
 {
+
 	D3DXToRadian(spin_speed);
 	for (int i = 0; i < 4; i++)
 	{
@@ -181,17 +185,16 @@ void Set_Transform(THING* pThing,float fScale)
 }
 
 
+
 void Set_View_Light(FLOAT Eye_x, FLOAT Eye_y, FLOAT Eye_z)
 {
 	// ビュートランスフォーム（視点座標変換）
 	D3DXVECTOR3 vecEyePt(Eye_x, Eye_y, Eye_z); //カメラ（視点）位置
 	D3DXVECTOR3 vecLookatPt(0.0f, 0.0f, 0.0f);//注視位置
 	D3DXVECTOR3 vecUpVec(0.0f, 1.0f, 0.0f);//上方位置
-	D3DXMATRIXA16 matView;
 	D3DXMatrixLookAtLH(&matView, &vecEyePt, &vecLookatPt, &vecUpVec);
 	pD3Device->SetTransform(D3DTS_VIEW, &matView);
 	// プロジェクショントランスフォーム（射影変換）
-	D3DXMATRIXA16 matProj;
 	D3DXMatrixPerspectiveFovLH(&matProj, D3DX_PI / 4.0f, 1.0f, 1.0f, 100.0f);
 	pD3Device->SetTransform(D3DTS_PROJECTION, &matProj);
 	// ライトをあてる 白色で鏡面反射ありに設定
@@ -223,8 +226,16 @@ void Draw_Thing(THING* pThing)
 }
 
 
-void Transform_Draw_Thing(THING* pThing,float fScale)
+void Transform_Draw_Thing(THING* pThing, float fScale, THING2D_POS* posxy)
 {
+	portPos._11 = 640.0f;
+	portPos._22 = -360.0f;
+	portPos._33 = 1.0f;
+	portPos._41 = 640.0f;
+	portPos._42 = 360.0f;
+	portPos._44 = 1.0f;
+
+
 	//ワールドトランスフォーム（絶対座標変換）
 	D3DXMATRIXA16 matWorld, matPosition, matScale;
 	D3DXMatrixIdentity(&matWorld);
@@ -234,6 +245,18 @@ void Transform_Draw_Thing(THING* pThing,float fScale)
 	D3DXMatrixScaling(&matScale, fScale, fScale, fScale);
 	D3DXMatrixMultiply(&matWorld, &matWorld, &matScale);
 	pD3Device->SetTransform(D3DTS_WORLD, &matWorld);
+	
+	D3DXMatrixMultiply(&displayPos, &matWorld, &matView);
+	D3DXMatrixMultiply(&displayPos, &displayPos, &matProj);
+	D3DXMatrixMultiply(&displayPos, &displayPos, &portPos);
+	int count = 0;
+	while (displayPos._44 > 0)
+	{
+		displayPos._44 -= 1.0f;
+		count++;
+	}
+	posxy->thing_posx = displayPos._41 / count;
+	posxy->thing_posy = displayPos._42 / count;
 
 	// レンダリング	 
 	for (DWORD i = 0; i<pThing->nMat; i++)
