@@ -1,5 +1,6 @@
 #include "main.h"
 #include "Stage_Render.h"
+#include "Init.h"
 
 #define STAGE_WIDTH 102
 #define PLAYER_SPEED 20.0f
@@ -7,7 +8,7 @@
 #define PLAYER_CENTER 300.0f
 
 #define gravity 5.0
-#define JUMP_POWER 60.0f
+#define JUMP_POWER 50.0f
 #define GROUND_COLLISION 650.0f
 
 #define SHURIKEN_SIZE 50.0f
@@ -29,7 +30,9 @@ enum STAGE
 	STAGE3
 };
 
-CUSTOMVERTEX player[] =
+float fyaw = 0.0f;
+
+CUSTOMVERTEX player_tmp[] =
 {
 	{ PLAYER_CENTER - 100.0f, 340.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
 	{ PLAYER_CENTER, 340.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.25f, 0.0f },
@@ -38,7 +41,7 @@ CUSTOMVERTEX player[] =
 };
 
 
-CUSTOMVERTEX enemy[] =
+CUSTOMVERTEX enemy_tmp[] =
 {
 	{ 840.0f, 340.0f, 0.5f, 1.0f, 0xFFFFFF66, 0.0f, 0.0f },
 	{ 935.0f, 340.0f, 0.5f, 1.0f, 0xFFFFFF66, 0.25f, 0.0f },
@@ -46,23 +49,23 @@ CUSTOMVERTEX enemy[] =
 	{ 840.0f, 590.0f, 0.5f, 1.0f, 0xFFFFFF66, 0.0f, 1.0f },
 };
 
-CUSTOMVERTEX collision_box[] =
+CUSTOMVERTEX collision_box_tmp[] =
 {
-	{ 540.0f, 340.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 0.0f },
-	{ 735.0f, 340.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 0.0f },
-	{ 735.0f, 500.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 1.0f },
-	{ 540.0f, 500.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 1.0f },
+	{ 540.0f, 340.0f, 0.5f, 1.0f, 0x55FFFFFF, 0.0f, 0.0f },
+	{ 735.0f, 340.0f, 0.5f, 1.0f, 0x55FFFFFF, 1.0f, 0.0f },
+	{ 735.0f, 500.0f, 0.5f, 1.0f, 0x55FFFFFF, 1.0f, 1.0f },
+	{ 540.0f, 500.0f, 0.5f, 1.0f, 0x55FFFFFF, 0.0f, 1.0f },
 };
 
-CUSTOMVERTEX collision_cannon[] =
+CUSTOMVERTEX collision_cannon_tmp[] =
 {
-	{ 1050.0f, 430.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 0.0f },
-	{ 1615.0f, 430.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 0.0f },
-	{ 1615.0f, 650.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 1.0f },
-	{ 1050.0f, 650.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 1.0f },
+	{ 1050.0f, 430.0f, 0.5f, 1.0f, 0x55FFFFFF, 0.0f, 0.0f },
+	{ 1615.0f, 430.0f, 0.5f, 1.0f, 0x55FFFFFF, 1.0f, 0.0f },
+	{ 1615.0f, 650.0f, 0.5f, 1.0f, 0x55FFFFFF, 1.0f, 1.0f },
+	{ 1050.0f, 650.0f, 0.5f, 1.0f, 0x55FFFFFF, 0.0f, 1.0f },
 };
 
-CUSTOMVERTEX back_ground[] =
+CUSTOMVERTEX back_ground_tmp[] =
 {
 	{ 0.0f, 0.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
 	{ 1280.0f, 0.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
@@ -79,6 +82,15 @@ CUSTOMVERTEX shuriken[]=
 	{ SHURIKEN_SIZE, SHURIKEN_SIZE, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
 	{ -SHURIKEN_SIZE, SHURIKEN_SIZE, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
 };
+CUSTOMVERTEX player[4];
+
+CUSTOMVERTEX enemy[4];
+
+CUSTOMVERTEX collision_box[4];
+
+CUSTOMVERTEX collision_cannon[4];
+
+CUSTOMVERTEX back_ground[4];
 
 CUSTOMVERTEX shuriken_tmp[4];
 
@@ -117,7 +129,6 @@ bool hit_flag = false;
 bool left_hit_flag = false;
 bool right_hit_flag = false;
 bool under_hit_flag = false;
-
 
 
 
@@ -479,9 +490,11 @@ void Game_Scene_Control(pTHING pThing)
 		KeyCheck_Dinput(&Key[A], DIK_A);
 		KeyCheck_Dinput(&Key[S], DIK_S);
 
+		thing[LEFT_DASH_THING].vecPosition = thing[SHINOBI_THING].vecPosition;
 
 		if (Key[ENTER] == PUSH)
 		{
+			Init_func();
 			current_scene = SELECT_SCENE;
 		}
 
@@ -496,7 +509,9 @@ void Game_Scene_Control(pTHING pThing)
 		}
 
 
-		if (collision_box[1].x > collision_cannon[0].x && collision_box[2].x < collision_cannon[1].x && collision_box[2].y > collision_cannon[0].y)
+		if (collision_box[1].x > collision_cannon[0].x 
+			&& collision_box[2].x < collision_cannon[1].x 
+			&& collision_box[2].y > collision_cannon[0].y)
 		{
 			right_hit_flag = true;
 		}
@@ -505,7 +520,9 @@ void Game_Scene_Control(pTHING pThing)
 			right_hit_flag = false;
 		}
 
-		if (collision_box[0].x < collision_cannon[1].x && collision_box[0].x > collision_cannon[0].x && collision_box[2].y > collision_cannon[0].y)
+		if (collision_box[0].x < collision_cannon[1].x 
+			&& collision_box[0].x > collision_cannon[0].x 
+			&& collision_box[2].y > collision_cannon[0].y)
 		{
 			left_hit_flag = true;
 		}
@@ -514,7 +531,9 @@ void Game_Scene_Control(pTHING pThing)
 			left_hit_flag = false;
 		}
 
-		if (collision_box[2].y > collision_cannon[0].y && collision_box[0].x > collision_cannon[0].x && collision_box[1].x < collision_cannon[1].x)
+		if (collision_box[2].y > collision_cannon[0].y 
+			&& collision_box[0].x > collision_cannon[0].x 
+			&& collision_box[1].x < collision_cannon[1].x)
 		{
 			under_hit_flag = true;
 			collision_box_state.sky_flag = false;
@@ -523,29 +542,31 @@ void Game_Scene_Control(pTHING pThing)
 			thing_gravity = 0.05f;
 			thing[SHINOBI_THING].vecPosition.y = -0.5f;
 		}
-		else if (collision_box[2].y > collision_cannon[0].y && collision_box[1].x > collision_cannon[0].x && collision_box[0].x <= collision_cannon[0].x)
+		else if (collision_box[2].y > collision_cannon[0].y 
+			&& collision_box[1].x >= collision_cannon[0].x 
+			&& collision_box[0].x <= collision_cannon[0].x
+			&& right_hit_flag == true
+			&& collision_box[0].y < collision_cannon[0].y)
 		{
 			under_hit_flag = true;
 			collision_box_state.sky_flag = false;
 			g_v0 = 0.0f;
 			jump_v0 = JUMP_POWER;
 			thing_gravity = 0.05f;
-			if (thing[SHINOBI_THING].vecPosition.y != -3.0f)
-			{
-				thing[SHINOBI_THING].vecPosition.y = -0.5f;
-			}
+			thing[SHINOBI_THING].vecPosition.y = -0.5f;
 		}
-		else if (collision_box[2].y > collision_cannon[0].y && collision_box[3].x < collision_cannon[1].x && collision_box[1].x >= collision_cannon[1].x)
+		else if (collision_box[2].y > collision_cannon[0].y 
+			&& collision_box[3].x <= collision_cannon[1].x 
+			&& collision_box[1].x >= collision_cannon[1].x
+			&& left_hit_flag == true
+			&& collision_box[0].y < collision_cannon[0].y)
 		{
 			under_hit_flag = true;
 			collision_box_state.sky_flag = false;
 			g_v0 = 0.0f;
 			jump_v0 = JUMP_POWER;
 			thing_gravity = 0.05f;
-			if (thing[SHINOBI_THING].vecPosition.y != -3.0f)
-			{
-				thing[SHINOBI_THING].vecPosition.y = -0.5f;
-			}
+			thing[SHINOBI_THING].vecPosition.y = -0.5f;
 		}
 		else
 		{
@@ -554,8 +575,8 @@ void Game_Scene_Control(pTHING pThing)
 
 		if (Key[RIGHT] == ON && right_hit_flag == false || Key[RIGHT] == ON && collision_box[1].y < 420.0f)
 		{
-			//thing.vecPosition.x += 0.1f;
-			if (tmp_husuma_right[101][1].x >= 1280.0f /*&& player[3].x == PLAYER_CENTER*/)
+			rend_flag = false;
+			if (tmp_husuma_right[101][1].x >= 1280.0f)
 			{
 				for (int count_i = 0; count_i < 4; count_i++)
 				{
@@ -569,8 +590,8 @@ void Game_Scene_Control(pTHING pThing)
 
 		if (Key[LEFT] == ON && left_hit_flag == false || Key[LEFT] == ON  && collision_box[1].y < 420.0f)
 		{
-			//thing.vecPosition.x -= 0.1f;
-			if (tmp_ground[0][0].x <= 0.0f /*&& player[3].x == PLAYER_CENTER*/)
+			rend_flag = true;
+			if (tmp_ground[0][0].x <= 0.0f)
 			{
 				for (int count_i = 0; count_i < 4; count_i++)
 				{
@@ -587,15 +608,10 @@ void Game_Scene_Control(pTHING pThing)
 			collision_box_state.sky_flag = true;
 		}
 
-		if (Key[UP] == PUSH /*&& player_state.sky_flag == false*/)
+		if (Key[UP] == PUSH)
 		{
 			Jump_Flag = 3;
 		}
-
-		//if (Key[SPACE] == PUSH)
-		//{
-		//	Jump_Flag = 4;
-		//}
 
 
 
@@ -604,11 +620,6 @@ void Game_Scene_Control(pTHING pThing)
 			g_v0 += gravity;
 			//thing[0].vecPosition.y -= thing_gravity;
 			thing_gravity *= 1.5f;
-
-			//for (int count = 0; count < 4; count++)
-			//{
-			//	collision_box[count].y += g_v0;
-			//}
 		}
 			if (collision_box[2].y >= GROUND_COLLISION)
 			{
@@ -652,7 +663,6 @@ void Game_Scene_Control(pTHING pThing)
 				Jump_Flag = 10;
 			}
 		}
-
 		break;
 	}
 }
@@ -814,7 +824,7 @@ void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture,pTHING pThing)
 		}
 		else
 		{
-			Transform_Draw_Thing(&pThing[TOMATO_THING], 1.0f,&tomato_pos);
+			Transform_Draw_Thing(&pThing[LEFT_DASH_THING], 1.0f, &shinobi_pos);
 		}
 		EndScene();
 		break;

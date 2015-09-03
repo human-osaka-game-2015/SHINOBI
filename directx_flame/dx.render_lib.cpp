@@ -10,6 +10,7 @@ D3DXMATRIXA16 matProj;
 
 D3DXMATRIXA16 portPos, displayPos;
 
+FLOAT fHeading = D3DXToRadian(180.0f), fPitch = 0, fBank = 0;
 
 void Vertex_Spin(CUSTOMVERTEX* vertex, float spin_speed, CUSTOMVERTEX* temp)
 {
@@ -166,7 +167,14 @@ void Mesh_Load_FromX(LPTSTR xfilename, pTHING pThing, D3DXVECTOR3* pvecPosition)
 	// マテリアル情報開放
 	pMatBuf->Release();
 
-
+	// Zバッファー処理を有効にする
+	pD3Device->SetRenderState(D3DRS_ZENABLE, TRUE);
+	// ライトを有効にする
+	pD3Device->SetRenderState(D3DRS_LIGHTING, TRUE);
+	// アンビエントライト（環境光）を設定する
+	pD3Device->SetRenderState(D3DRS_AMBIENT, 0x00111111);
+	// スペキュラ（鏡面反射）を有効にする
+	pD3Device->SetRenderState(D3DRS_SPECULARENABLE, TRUE);
 
 }
 
@@ -198,7 +206,7 @@ void Set_View_Light(FLOAT Eye_x, FLOAT Eye_y, FLOAT Eye_z)
 	D3DXMatrixPerspectiveFovLH(&matProj, D3DX_PI / 4.0f, 1.0f, 1.0f, 100.0f);
 	pD3Device->SetTransform(D3DTS_PROJECTION, &matProj);
 	// ライトをあてる 白色で鏡面反射ありに設定
-	D3DXVECTOR3 vecDirection(1, 1, 1);
+	D3DXVECTOR3 vecDirection(0, 0, 1);
 	D3DLIGHT9 light;
 	ZeroMemory(&light, sizeof(D3DLIGHT9));
 	light.Type = D3DLIGHT_DIRECTIONAL;
@@ -216,6 +224,9 @@ void Set_View_Light(FLOAT Eye_x, FLOAT Eye_y, FLOAT Eye_z)
 
 void Draw_Thing(THING* pThing)
 {
+	// レンダリング
+	pD3Device->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
+		D3DCOLOR_XRGB(100, 100, 100), 1.0f, 0);
 	// レンダリング	 
 	for (DWORD i = 0; i<pThing->nMat; i++)
 	{
@@ -226,7 +237,7 @@ void Draw_Thing(THING* pThing)
 }
 
 
-void Transform_Draw_Thing(THING* pThing, float fScale, THING2D_POS* posxy)
+void Transform_Draw_Thing(THING* pThing, float fScale,THING2D_POS* posxy)
 {
 	portPos._11 = 640.0f;
 	portPos._22 = -360.0f;
@@ -239,13 +250,14 @@ void Transform_Draw_Thing(THING* pThing, float fScale, THING2D_POS* posxy)
 	//ワールドトランスフォーム（絶対座標変換）
 	D3DXMATRIXA16 matWorld, matPosition, matScale;
 	D3DXMatrixIdentity(&matWorld);
-	D3DXMatrixTranslation(&matPosition, pThing->vecPosition.x, pThing->vecPosition.y,pThing->vecPosition.z);
+	D3DXMatrixTranslation(&matPosition, pThing->vecPosition.x, pThing->vecPosition.y, pThing->vecPosition.z);
 	D3DXMatrixMultiply(&matWorld, &matWorld, &matPosition);
 
 	D3DXMatrixScaling(&matScale, fScale, fScale, fScale);
 	D3DXMatrixMultiply(&matWorld, &matWorld, &matScale);
 	pD3Device->SetTransform(D3DTS_WORLD, &matWorld);
-	
+
+	//3D座標を2D座標に変換
 	D3DXMatrixMultiply(&displayPos, &matWorld, &matView);
 	D3DXMatrixMultiply(&displayPos, &displayPos, &matProj);
 	D3DXMatrixMultiply(&displayPos, &displayPos, &portPos);

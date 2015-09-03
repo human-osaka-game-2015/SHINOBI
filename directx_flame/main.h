@@ -20,10 +20,11 @@ void Select_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture);
 void Game_Scene_Control(pTHING pThing);
 void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture, pTHING pThing);
 
+
 enum THING_MESH
 {
 	SHINOBI_THING,
-	TOMATO_THING,
+	LEFT_DASH_THING,
 	CANNON_THING,
 	THING_MAX
 };

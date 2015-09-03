@@ -10,7 +10,7 @@
 #include "d_sound.h"
 #include "CSV _Load.h"
 #include "main.h"
-
+#include "Init.h"
 #define TITLE 	TEXT("`SHINOBI`ŒˆíIˆÅ‚Ì˜Z•O")
 #define STAGE_WIDTH 102
 #define PLAYER_SPEED 20.0f
@@ -141,10 +141,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	//LPD3DXBUFFER	pMatBuf = NULL;
 
 	Mesh_Load_FromX("shinobi.x", &thing[SHINOBI_THING], &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
-	Mesh_Load_FromX("dash_left.x", &thing[TOMATO_THING], &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
+	Mesh_Load_FromX("dash_left.x", &thing[LEFT_DASH_THING], &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
 	Mesh_Load_FromX("cannon.x", &thing[CANNON_THING], &D3DXVECTOR3(8.0f, -6.0f, 9.0f));
 
-
+	Init_func();
 	RenderSet();
 	// Zƒoƒbƒtƒ@[ˆ—‚ð—LŒø‚É‚·‚é
 	pD3Device->SetRenderState(D3DRS_ZENABLE, TRUE);

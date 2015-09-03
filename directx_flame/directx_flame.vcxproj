@@ -74,6 +74,7 @@
     <ClCompile Include="directx_lib.cpp" />
     <ClCompile Include="dx.render_lib.cpp" />
     <ClCompile Include="game.cpp" />
+    <ClCompile Include="Init.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="select.cpp" />
     <ClCompile Include="Sound.cpp" />
@@ -86,6 +87,7 @@
     <ClInclude Include="directx_lib.h" />
     <ClInclude Include="dx.render_lib.h" />
     <ClInclude Include="d_sound.h" />
+    <ClInclude Include="Init.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="Stage_Render.h" />
   </ItemGroup>

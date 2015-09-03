@@ -4,7 +4,7 @@
 
 
 
-CUSTOMVERTEX ground[] =
+CUSTOMVERTEX Init_ground[] =
 {
 	{ 0.0f, 600.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
 	{ 1280.0f, 600.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
@@ -13,13 +13,14 @@ CUSTOMVERTEX ground[] =
 };
 
 
-CUSTOMVERTEX back_ground_wall[] =
+CUSTOMVERTEX Init_back_ground_wall[] =
 {
 	{ 0.0f, 0.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
 	{ 320.0f, 0.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.125f, 0.0f },
 	{ 320.0f, 600.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.125f, 1.0f },
 	{ 0.0f, 600.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
 };
+
 CUSTOMVERTEX tmp_ground[STAGE_WIDTH][4];
 CUSTOMVERTEX tmp_wall_left[STAGE_WIDTH][4];
 CUSTOMVERTEX tmp_wall_right[STAGE_WIDTH][4];
@@ -28,6 +29,8 @@ CUSTOMVERTEX tmp_husuma_right[STAGE_WIDTH][4];
 CUSTOMVERTEX tmp_window_right[STAGE_WIDTH][4];
 CUSTOMVERTEX tmp_window_left[STAGE_WIDTH][4];
 
+CUSTOMVERTEX ground[4];
+CUSTOMVERTEX back_ground_wall[4];
 
 void Stage_Render(LPDIRECT3DTEXTURE9 *pTexture)
 {
@@ -48,7 +51,6 @@ void Stage_Render(LPDIRECT3DTEXTURE9 *pTexture)
 			tmp_window_right[count_i][count_n].tu += 0.375f;
 			tmp_husuma_left[count_i][count_n].tu += 0.5f;
 			tmp_husuma_right[count_i][count_n].tu += 0.625;
-
 		}
 	}
 
@@ -103,5 +105,4 @@ void Stage_Render(LPDIRECT3DTEXTURE9 *pTexture)
 			break;
 		}
 	}
-
 }
