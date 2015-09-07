@@ -173,7 +173,7 @@ void sound_stop(SOUND s_name)
 	if (sound_flag[s_name] == 1)
 	{
 		pDSBuffer[s_name]->Stop();
-		//pDSBuffer[s_name]->Release();
+		pDSBuffer[s_name]->SetCurrentPosition(0);
 		sound_flag[s_name] = 0;
 	}
 }

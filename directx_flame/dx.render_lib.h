@@ -21,6 +21,9 @@ typedef struct _THING
 	D3DMATERIAL9*			pMeshMat;	// マテリアル情報
 	LPDIRECT3DTEXTURE9*	pMeshTex;	// メッシュのテクスチャ
 	D3DXVECTOR3 vecPosition;
+	FLOAT thing_posx;
+	FLOAT thing_posy;
+
 }THING,*pTHING;
 
 typedef struct THING_POS

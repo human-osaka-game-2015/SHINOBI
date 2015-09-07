@@ -122,10 +122,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Tex_Load_EX(pTexture, "makimoo.png", MAKI_LEFT_TEX, 255, 255, 255, 255);
 	Tex_Load_EX(pTexture, "makikami.png", MAKI_MID_TEX, 255, 255, 255, 255);
 	Tex_Load_EX(pTexture, "maki3.png", MAKI_RIGHT_TEX, 255, 255, 255, 255);
-	Tex_Load_EX(pTexture, "fire.jpg", FIRE_EFFECT_TEX, 255, 0, 0, 0);
-	Tex_Load_EX(pTexture, "dash.png", PLAYER_DASH_TEX, 255, 0, 0, 0);
+	Tex_Load_EX(pTexture, "fire_5.png", FIRE_EFFECT_TEX, 255, 0, 0, 0);
+	Tex_Load_EX(pTexture, "ninja.jpg", PLAYER_DASH_TEX, 255, 255, 255, 255);
 	Tex_Load_EX(pTexture, "attack.png", PLAYER_ATTACK_TEX, 255, 0, 0, 0);
-	Tex_Load_EX(pTexture, "shuriken.bmp", SHURIKEN_TEX, 255, 255, 255, 255);
+	Tex_Load_EX(pTexture, "siyyurikenn_y.png", SHURIKEN_TEX, 255, 255, 255, 255);
 
 	Tex_Load(pTexture, "white.png", WHITE_TEX);
 	Tex_Load(pTexture, "titlerogo2_cg3.jpg", TITLE_TEX);
@@ -140,9 +140,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	//LPD3DXBUFFER	pMatBuf = NULL;
 
-	Mesh_Load_FromX("shinobi.x", &thing[SHINOBI_THING], &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
-	Mesh_Load_FromX("dash_left.x", &thing[LEFT_DASH_THING], &D3DXVECTOR3(0.0f, -3.0f, 9.0f));
+	Mesh_Load_FromX("shinobi.x", &thing[SHINOBI_THING], &D3DXVECTOR3(-2.0f, -3.0f, 9.0f));
+	Mesh_Load_FromX("dash_left.x", &thing[LEFT_DASH_THING], &D3DXVECTOR3(-2.0f, -3.0f, 9.0f));
 	Mesh_Load_FromX("cannon.x", &thing[CANNON_THING], &D3DXVECTOR3(8.0f, -6.0f, 9.0f));
+	Mesh_Load_FromX("rance_right.x", &thing[RANCE_RIGHT], &D3DXVECTOR3(-2.0f, -3.0f, 9.0f));
+	Mesh_Load_FromX("rance_left.x", &thing[RANCE_LEFT], &D3DXVECTOR3(8.0f, -3.0f, 9.0f));
+	Mesh_Load_FromX("boss.x", &thing[BOSS_THING], &D3DXVECTOR3(5.0f, -3.0f, 9.0f));
+
 
 	Init_func();
 	RenderSet();
@@ -216,18 +220,6 @@ void Control()
 
 
 	case GAME_SCENE:
-		KeyCheck_Dinput(&Key[Q], DIK_Q);
-		KeyCheck_Dinput(&Key[W], DIK_W);
-		if (Key[Q] == ON)
-		{
-			eye_z += 0.1f;
-		}
-
-		if (Key[W] == ON)
-		{
-			eye_z -= 0.1f;
-		}
-
 		Game_Scene_Control(thing);
 		break;
 
@@ -264,7 +256,6 @@ void Render()
 
 		case GAME_SCENE:
 			Game_Scene_Render(pTexture , thing);
-
 			break;
 			
 		case GAMEOVER_SCENE:

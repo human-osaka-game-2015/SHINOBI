@@ -203,7 +203,7 @@ void Set_View_Light(FLOAT Eye_x, FLOAT Eye_y, FLOAT Eye_z)
 	D3DXMatrixLookAtLH(&matView, &vecEyePt, &vecLookatPt, &vecUpVec);
 	pD3Device->SetTransform(D3DTS_VIEW, &matView);
 	// プロジェクショントランスフォーム（射影変換）
-	D3DXMatrixPerspectiveFovLH(&matProj, D3DX_PI / 4.0f, 1.0f, 1.0f, 100.0f);
+	D3DXMatrixPerspectiveFovLH(&matProj, D3DX_PI / 4.0f, (float)1280/720, 1.0f, 100.0f);
 	pD3Device->SetTransform(D3DTS_PROJECTION, &matProj);
 	// ライトをあてる 白色で鏡面反射ありに設定
 	D3DXVECTOR3 vecDirection(0, 0, 1);
@@ -261,6 +261,7 @@ void Transform_Draw_Thing(THING* pThing, float fScale,THING2D_POS* posxy)
 	D3DXMatrixMultiply(&displayPos, &matWorld, &matView);
 	D3DXMatrixMultiply(&displayPos, &displayPos, &matProj);
 	D3DXMatrixMultiply(&displayPos, &displayPos, &portPos);
+	
 	int count = 0;
 	while (displayPos._44 > 0)
 	{
