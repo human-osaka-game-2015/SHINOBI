@@ -8,7 +8,7 @@
 #define PLAYER_CENTER 300.0f
 
 #define gravity 2.0
-#define JUMP_POWER 40.0f
+#define JUMP_POWER 30.0f
 #define GROUND_COLLISION 650.0f
 
 #define SHURIKEN_SIZE 30.0f
@@ -36,7 +36,9 @@ enum STAGE
 	STAGE3
 };
 
-float fyaw = 0.0f;
+FLOAT eye_x = 0.0f;
+FLOAT eye_y = 0.0f;
+FLOAT eye_z = -1.0f;
 
 CUSTOMVERTEX player_tmp[] =
 {
@@ -72,12 +74,12 @@ CUSTOMVERTEX collision_box_tmp[] =
 	{ 540.0f, 500.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 1.0f },
 };
 
-CUSTOMVERTEX collision_cannon_tmp[] =
+CUSTOMVERTEX collision_enemy_rance_tmp[] =
 {
-	{ 1050.0f, 430.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 0.0f },
-	{ 1615.0f, 430.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 0.0f },
-	{ 1615.0f, 650.0f, 0.5f, 1.0f, 0x00FFFFFF, 1.0f, 1.0f },
-	{ 1050.0f, 650.0f, 0.5f, 1.0f, 0x00FFFFFF, 0.0f, 1.0f },
+	{ 1050.0f, 430.0f, 0.5f, 1.0f, 0x11FFFFFF, 0.0f, 0.0f },
+	{ 1615.0f, 430.0f, 0.5f, 1.0f, 0x11FFFFFF, 1.0f, 0.0f },
+	{ 1615.0f, 650.0f, 0.5f, 1.0f, 0x11FFFFFF, 1.0f, 1.0f },
+	{ 1050.0f, 650.0f, 0.5f, 1.0f, 0x11FFFFFF, 0.0f, 1.0f },
 };
 
 CUSTOMVERTEX back_ground_tmp[] =
@@ -101,7 +103,7 @@ CUSTOMVERTEX shuriken[]=
 typedef struct
 {
 	bool enemy_is_right;
-
+	bool remain;
 }ENEMY_STATE;
 CUSTOMVERTEX player[4];
 
@@ -109,13 +111,14 @@ CUSTOMVERTEX enemy[4];
 
 CUSTOMVERTEX collision_box[4];
 
-CUSTOMVERTEX collision_cannon[4];
+CUSTOMVERTEX collision_enemy_rance[4];
 
 CUSTOMVERTEX back_ground[4];
 
 CUSTOMVERTEX shuriken_tmp[4];
 
-ENEMY_STATE rance;
+ENEMY_STATE rance_state = { true , true };
+
 STATE player_state = { false, true };
 STATE enemy_state = { false, true };
 STATE collision_box_state = { false, true };
@@ -141,7 +144,8 @@ int stage_num = STAGE1;
 extern KEYSTATE Key[KEYMAX];
 extern int current_scene;
 extern THING thing[THING_MAX];
-
+extern int game_score_time;
+extern int Second;
 //bool attack_flag[FLAG_MAX] =
 //{
 //	false,false
@@ -156,14 +160,14 @@ bool right_purasu_flag[ATTACK_MAX] =
 };
 float Spos_x1 = 0;
 float Spos_y1 = 0;
-int Spos_x = 0;
-int Spos_y = 0;
+int Spos_x2 = 0;
+int Spos_y2 = 0;
 
+bool init_flag = false;
 bool hit_flag = false;
 bool left_hit_flag = false;
 bool right_hit_flag = false;
 bool under_hit_flag = false;
-
 
 
 void Game_Scene_Control(pTHING pThing)
@@ -256,12 +260,12 @@ void Game_Scene_Control(pTHING pThing)
 			rad += 5;
 			if (right_purasu_flag[SHURIKEN_ATTACK] == true)
 			{
-				Spos_x += SHURIKEN_SPEED;
+				Spos_x2 += SHURIKEN_SPEED;
 			}
 
 			if (right_purasu_flag == false)
 			{
-				Spos_x -= SHURIKEN_SPEED;
+				Spos_x2 -= SHURIKEN_SPEED;
 			}
 
 		}
@@ -443,8 +447,6 @@ void Game_Scene_Control(pTHING pThing)
 			}
 		}
 
-
-
 		break;
 
 	case STAGE3:
@@ -456,6 +458,7 @@ void Game_Scene_Control(pTHING pThing)
 		KeyCheck_Dinput(&Key[SPACE], DIK_SPACE);
 		KeyCheck_Dinput(&Key[Z], DIK_Z);
 		KeyCheck_Dinput(&Key[S], DIK_S);
+		KeyCheck_Dinput(&Key[N], DIK_N);
 
 
 		if (Key[Z] == PUSH && fire_flag == false)
@@ -466,10 +469,13 @@ void Game_Scene_Control(pTHING pThing)
 				for (int i = 0; i < 4; i++)
 				{
 					fire[j][i] = collision_box[i];
-
 				}
 			}
-
+		}
+		
+		if (Key[N] == PUSH)
+		{
+			current_scene = RESULT_SCENE;
 		}
 		
 		if (rend_flag == false)
@@ -509,7 +515,7 @@ void Game_Scene_Control(pTHING pThing)
 			{
 				for (int i = 0; i < 4; i++)
 				{
-						fire[j][i].x += 110.0f * j/* + 30.0f*/;
+						fire[j][i].x += 110.0f * j;
 						fire[j][i].y += 20.0f * j;
 				}
 			}
@@ -521,7 +527,7 @@ void Game_Scene_Control(pTHING pThing)
 			{
 				for (int i = 0; i < 4; i++)
 				{
-					fire[j][i].x -= 110.0f * j/* + 30.0f*/;
+					fire[j][i].x -= 110.0f * j;
 					fire[j][i].y += 20.0f * j;
 				}
 			}
@@ -529,6 +535,7 @@ void Game_Scene_Control(pTHING pThing)
 
 
 		thing[LEFT_DASH_THING].vecPosition = thing[SHINOBI_THING].vecPosition;
+
 		if (Key[S] == PUSH && shuriken_flag == false)
 		{
 			shuriken_flag = true;
@@ -549,24 +556,24 @@ void Game_Scene_Control(pTHING pThing)
 				if (rend_flag == false)
 				{
 					Spos_x1 += collision_box[1].x;
-					Spos_y1 += collision_box[1].y;
+					Spos_y1 += collision_box[1].y - 50.0f;
 				}
 				if (rend_flag == true)
 				{
 					Spos_x1 += collision_box[0].x;
-					Spos_y1 += collision_box[0].y;
+					Spos_y1 += collision_box[0].y - 50.0f;
 				}
 				link_flag = false;
 			}
 			rad += 5;
 			if (right_purasu_flag[SHURIKEN_ATTACK] == true)
 			{
-				Spos_x += SHURIKEN_SPEED;
+				Spos_x2 += SHURIKEN_SPEED;
 			}
 
 			if (right_purasu_flag[SHURIKEN_ATTACK] == false)
 			{
-				Spos_x -= SHURIKEN_SPEED;
+				Spos_x2 -= SHURIKEN_SPEED;
 			}
 		}
 
@@ -577,69 +584,69 @@ void Game_Scene_Control(pTHING pThing)
 			current_scene = SELECT_SCENE;
 		}
 
-		if (collision_box[1].x > collision_cannon[0].x 
-			&& collision_box[2].x < collision_cannon[1].x 
-			&& collision_box[2].y > collision_cannon[0].y)
-		{
-			right_hit_flag = true;
-		}
-		else
-		{
-			right_hit_flag = false;
-		}
+		//if (collision_box[1].x > collision_cannon[0].x 
+		//	&& collision_box[2].x < collision_cannon[1].x 
+		//	&& collision_box[2].y > collision_cannon[0].y)
+		//{
+		//	right_hit_flag = true;
+		//}
+		//else
+		//{
+		//	right_hit_flag = false;
+		//}
 
-		if (collision_box[0].x < collision_cannon[1].x 
-			&& collision_box[0].x > collision_cannon[0].x 
-			&& collision_box[2].y > collision_cannon[0].y)
-		{
-			left_hit_flag = true;
-		}
-		else
-		{
-			left_hit_flag = false;
-		}
+		//if (collision_box[0].x < collision_cannon[1].x 
+		//	&& collision_box[0].x > collision_cannon[0].x 
+		//	&& collision_box[2].y > collision_cannon[0].y)
+		//{
+		//	left_hit_flag = true;
+		//}
+		//else
+		//{
+		//	left_hit_flag = false;
+		//}
 
-		if (collision_box[2].y > collision_cannon[0].y 
-			&& collision_box[0].x > collision_cannon[0].x 
-			&& collision_box[1].x < collision_cannon[1].x)
-		{
-			under_hit_flag = true;
-			collision_box_state.sky_flag = false;
-			g_v0 = 0.0f;
-			jump_v0 = JUMP_POWER;
-			thing_gravity = 0.05f;
-			thing[SHINOBI_THING].vecPosition.y = -0.5f;
-		}
-		else if (collision_box[2].y > collision_cannon[0].y 
-			&& collision_box[1].x >= collision_cannon[0].x 
-			&& collision_box[0].x <= collision_cannon[0].x
-			&& right_hit_flag == true
-			&& collision_box[0].y < collision_cannon[0].y)
-		{
-			under_hit_flag = true;
-			collision_box_state.sky_flag = false;
-			g_v0 = 0.0f;
-			jump_v0 = JUMP_POWER;
-			thing_gravity = 0.05f;
-			thing[SHINOBI_THING].vecPosition.y = -0.5f;
-		}
-		else if (collision_box[2].y > collision_cannon[0].y 
-			&& collision_box[3].x <= collision_cannon[1].x 
-			&& collision_box[1].x >= collision_cannon[1].x
-			&& left_hit_flag == true
-			&& collision_box[0].y < collision_cannon[0].y)
-		{
-			under_hit_flag = true;
-			collision_box_state.sky_flag = false;
-			g_v0 = 0.0f;
-			jump_v0 = JUMP_POWER;
-			thing_gravity = 0.05f;
-			thing[SHINOBI_THING].vecPosition.y = -0.5f;
-		}
-		else
-		{
-			under_hit_flag = false;
-		}
+		//if (collision_box[2].y > collision_cannon[0].y 
+		//	&& collision_box[0].x > collision_cannon[0].x 
+		//	&& collision_box[1].x < collision_cannon[1].x)
+		//{
+		//	under_hit_flag = true;
+		//	collision_box_state.sky_flag = false;
+		//	g_v0 = 0.0f;
+		//	jump_v0 = JUMP_POWER;
+		//	thing_gravity = 0.05f;
+		//	thing[SHINOBI_THING].vecPosition.y = -0.5f;
+		//}
+		//else if (collision_box[2].y > collision_cannon[0].y 
+		//	&& collision_box[1].x >= collision_cannon[0].x 
+		//	&& collision_box[0].x <= collision_cannon[0].x
+		//	&& right_hit_flag == true
+		//	&& collision_box[0].y < collision_cannon[0].y)
+		//{
+		//	under_hit_flag = true;
+		//	collision_box_state.sky_flag = false;
+		//	g_v0 = 0.0f;
+		//	jump_v0 = JUMP_POWER;
+		//	thing_gravity = 0.05f;
+		//	thing[SHINOBI_THING].vecPosition.y = -0.5f;
+		//}
+		//else if (collision_box[2].y > collision_cannon[0].y 
+		//	&& collision_box[3].x <= collision_cannon[1].x 
+		//	&& collision_box[1].x >= collision_cannon[1].x
+		//	&& left_hit_flag == true
+		//	&& collision_box[0].y < collision_cannon[0].y)
+		//{
+		//	under_hit_flag = true;
+		//	collision_box_state.sky_flag = false;
+		//	g_v0 = 0.0f;
+		//	jump_v0 = JUMP_POWER;
+		//	thing_gravity = 0.05f;
+		//	thing[SHINOBI_THING].vecPosition.y = -0.5f;
+		//}
+		//else
+		//{
+		//	under_hit_flag = false;
+		//}
 
 		if (Key[RIGHT] == ON && right_hit_flag == false || Key[RIGHT] == ON && collision_box[1].y < 420.0f)
 		{
@@ -650,9 +657,9 @@ void Game_Scene_Control(pTHING pThing)
 				{
 					ground[count_i].x -= PLAYER_SPEED;
 					back_ground_wall[count_i].x -= PLAYER_SPEED;
-					collision_cannon[count_i].x -= PLAYER_SPEED;
-					thing[CANNON_THING].vecPosition.x -= 0.11f;
+					//collision_cannon[count_i].x -= PLAYER_SPEED;
 					thing[RANCE_LEFT].vecPosition.x -= 0.05f;
+					//eye_x -= 0.05f;
 				}
 			}
 		}
@@ -666,9 +673,9 @@ void Game_Scene_Control(pTHING pThing)
 				{
 					ground[count_i].x += PLAYER_SPEED;
 					back_ground_wall[count_i].x += PLAYER_SPEED;
-					collision_cannon[count_i].x += PLAYER_SPEED;
-					thing[CANNON_THING].vecPosition.x += 0.11f;
+					//collision_cannon[count_i].x += PLAYER_SPEED;
 					thing[RANCE_LEFT].vecPosition.x += 0.05f;
+					//eye_x += 0.05f;
 				}
 			}
 		}
@@ -684,32 +691,30 @@ void Game_Scene_Control(pTHING pThing)
 		}
 
 
-
 		if (collision_box_state.sky_flag == true && Jump_Flag == 10 && under_hit_flag == false)
 		{
 			g_v0 += gravity;
-			//thing[0].vecPosition.y -= thing_gravity;
 			thing_gravity *= 1.5f;
 		}
-			if (collision_box[2].y >= ground_collision)
+		
+		if (collision_box[2].y >= ground_collision)
+		{
+			//地面に入りこんだ差
+			float maegin = 0;
+			maegin = collision_box[2].y - ground_collision;
+			for (int count = 0; count < 4; count++)
 			{
-				//地面に入りこんだ差
-				float maegin = 0;
-				maegin = collision_box[2].y - ground_collision;
-				for (int count = 0; count < 4; count++)
-				{
-					collision_box[count].y -= maegin;
-				}
-
-				collision_box_state.sky_flag = false;
-				g_v0 = 0.0f;
-				jump_v0 = JUMP_POWER;
+				collision_box[count].y -= maegin;
 			}
+
+			collision_box_state.sky_flag = false;
+			g_v0 = 0.0f;
+			jump_v0 = JUMP_POWER;
+		}
 
 		if (Jump_Flag == 10 && thing[0].vecPosition.y > P_HIGHT)
 		{
 			thing[0].vecPosition.y -= thing_gravity;
-			//thing_gravity *= 1.5f;
 		}
 
 		if (thing[0].vecPosition.y < P_HIGHT)
@@ -720,10 +725,6 @@ void Game_Scene_Control(pTHING pThing)
 
 		if (Jump_Flag == 3)
 		{
-			//for (int count = 0; count < 4; count++)
-			//{
-			//	collision_box[count].y -= jump_v0;
-			//}
 			thing[0].vecPosition.y += jump_v0 / 80.0f;
 
 			jump_v0 -= gravity;
@@ -739,6 +740,7 @@ void Game_Scene_Control(pTHING pThing)
 
 void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture,pTHING pThing)
 {
+	Set_View_Light(eye_x, eye_y, eye_z);
 	switch (stage_num)
 	{
 	case STAGE1:
@@ -752,79 +754,6 @@ void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture,pTHING pThing)
 		BeginScene();
 
 		Stage_Render(pTexture);
-		//if (fire_flag == true)
-		//{
-
-		//	Tex_Draw(pTexture, fire, FIRE_EFFECT_TEX);
-
-		//	if (player_state.character_is_right == true)
-		//	{
-		//		for (int count = 0; count < 4; count++)
-		//		{
-		//			fire[count].x += PLAYER_SPEED * 1.5;
-		//			fire[count].color -= 0x04000000;
-		//		}
-		//	}
-		//	else
-		//	{
-		//		for (int count = 0; count < 4; count++)
-		//		{
-		//			fire[count].x -= PLAYER_SPEED * 1.5;
-		//			fire[count].color -= 0x04000000;
-		//		}
-		//	}
-
-		//	if (fire[3].x >= 1280.0f || fire[1].x <= 0.0f)
-		//	{
-		//		fire_flag = false;
-		//	}
-		//}
-		//else
-		//{
-		//	for (int count = 0; count < 4; count++)
-		//	{
-		//		fire[count] = player[count];
-		//	}
-
-		//	if (player_state.character_is_right == true)
-		//	{
-		//		//炎をプレイヤーからずらしている
-		//		fire[0].tu = 0.0f;
-		//		fire[1].tu = 1.0f;
-		//		fire[2].tu = 1.0f;
-		//		fire[3].tu = 0.0f;
-
-		//		fire[0].y = fire[0].y + 60.0f;
-		//		fire[1].y = fire[1].y + 60.0f;
-		//		fire[2].y = fire[2].y - 50.0f;
-		//		fire[3].y = fire[3].y - 50.0f;
-
-		//		fire[0].x = fire[0].x + 60.0f;
-		//		fire[1].x = fire[1].x + 60.0f;
-		//		fire[2].x = fire[2].x + 60.0f;
-		//		fire[3].x = fire[3].x + 60.0f;
-
-		//	}
-		//	else
-		//	{
-		//		fire[0].tu = 1.0f;
-		//		fire[1].tu = 0.0f;
-		//		fire[2].tu = 0.0f;
-		//		fire[3].tu = 1.0f;
-
-		//		fire[0].y = fire[0].y + 60.0f;
-		//		fire[1].y = fire[1].y + 60.0f;
-		//		fire[2].y = fire[2].y - 50.0f;
-		//		fire[3].y = fire[3].y - 50.0f;
-
-		//		fire[0].x = fire[0].x - 60.0f;
-		//		fire[1].x = fire[1].x - 60.0f;
-		//		fire[2].x = fire[2].x - 60.0f;
-		//		fire[3].x = fire[3].x - 60.0f;
-
-		//	}
-
-		//}
 
 		Vertex_Spin(shuriken_tmp, rad, shuriken);
 
@@ -832,7 +761,7 @@ void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture,pTHING pThing)
 		{
 			//shuriken_tmp[i].x += player[1].x;
 			shuriken_tmp[i].y += Spos_y1;
-			shuriken_tmp[i].x = shuriken_tmp[i].x + Spos_x + Spos_x1;
+			shuriken_tmp[i].x = shuriken_tmp[i].x + Spos_x2 + Spos_x1;
 		}
 
 		if (shuriken_tmp[0].x <= 1400.0f&&shuriken_tmp[0].x >= -30.0f&&shuriken_flag == true)
@@ -845,7 +774,7 @@ void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture,pTHING pThing)
 			link_flag = true;
 			Spos_x1 = 0;
 			Spos_y1 = 0;
-			Spos_x = 0;
+			Spos_x2 = 0;
 			rad = 0;
 		}
 
@@ -868,14 +797,8 @@ void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture,pTHING pThing)
 		collision_box[3].x = shinobi_pos.thing_posx - 80.0f;
 		collision_box[3].y = shinobi_pos.thing_posy + 30.0f;
 
-		collision_cannon[0].x = cannon_pos.thing_posx - 100.0f;
-		collision_cannon[0].y = cannon_pos.thing_posy - 200.0f;
-		collision_cannon[1].x = cannon_pos.thing_posx + 250.0f;
-		collision_cannon[1].y = cannon_pos.thing_posy - 200.0f;
-		collision_cannon[2].x = cannon_pos.thing_posx + 250.0f;
-		collision_cannon[2].y = cannon_pos.thing_posy + 30.0f;
-		collision_cannon[3].x = cannon_pos.thing_posx - 100.0f;
-		collision_cannon[3].y = cannon_pos.thing_posy + 30.0f;
+
+
 
 		thing[RANCE_RIGHT].vecPosition = thing[RANCE_LEFT].vecPosition;
 
@@ -883,14 +806,25 @@ void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture,pTHING pThing)
 
 		Vertex_Spin(shuriken_tmp, rad, shuriken);
 
+		//for (int i = 0; i < 4;i++)
+		//{
+		//	if (shuriken_tmp[i].x > collision_enemy_rance[0].x || shuriken_tmp[i].x < collision_enemy_rance[1].x 
+		//		&& shuriken_tmp[i].y < collision_enemy_rance[0].y && shuriken_flag == true)
+		//	{
+		//		shuriken_flag = false;
+		//		rance_state.remain = false;
+		//	}
+		//}
+		Tex_Draw(pTexture, collision_enemy_rance, WHITE_TEX);
+		
 		for (int i = 0; i < 4; i++)
 		{
 			//shuriken_tmp[i].x += player[1].x;
 			shuriken_tmp[i].y += Spos_y1;
-			shuriken_tmp[i].x = shuriken_tmp[i].x + Spos_x + Spos_x1;
+			shuriken_tmp[i].x = shuriken_tmp[i].x + Spos_x2 + Spos_x1;
 		}
 
-		if (shuriken_tmp[0].x <= 1400.0f&&shuriken_tmp[0].x >= -30.0f&&shuriken_flag == true)
+		if (shuriken_tmp[0].x <= 1400.0f&&shuriken_tmp[0].x >= -30.0f && shuriken_flag == true)
 		{
 			Tex_Draw(pTexture, shuriken_tmp, SHURIKEN_TEX);
 		}
@@ -900,9 +834,23 @@ void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture,pTHING pThing)
 			link_flag = true;
 			Spos_x1 = 0;
 			Spos_y1 = 0;
-			Spos_x = 0;
+			Spos_x2 = 0;
 			rad = 0;
 		}
+
+		if (shuriken_tmp[1].x > collision_enemy_rance[0].x || shuriken_tmp[1].x < collision_enemy_rance[1].x
+			     && shuriken_tmp[1].y < collision_enemy_rance[0].y && shuriken_flag == true && init_flag == true
+				 && rance_state.remain == true)
+		{
+			rance_state.remain = false;
+			shuriken_flag = false;
+			link_flag = true;
+			Spos_x1 = 0;
+			Spos_y1 = 0;
+			Spos_x2 = 0;
+			rad = 0;
+		}
+
 
 		Tex_Draw(pTexture, collision_box, WHITE_TEX);
 		if (fire_flag == true)
@@ -912,7 +860,6 @@ void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture,pTHING pThing)
 				Tex_Draw(pTexture, fire[i], FIRE_EFFECT_TEX);
 
 			}
-			
 			game_time++;
 		}
 
@@ -926,23 +873,53 @@ void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture,pTHING pThing)
 		//		}
 		//	}
 		//}
+		if (game_time > 0)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				fire[0][i].color -= 0x11000000;
+			}
+		}
 
-		if (game_time / 60)
+		if (game_time > 20)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				fire[1][i].color -= 0x11000000;
+			}
+		}
+
+		if (game_time > 40)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				fire[2][i].color -= 0x11000000;
+			}
+		}
+
+		if (game_time > 60)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				fire[3][i].color -= 0x11000000;
+			}
+		}
+
+		if (game_time > 100)
 		{
 			fire_flag = false;
 			game_time = 0;
 		}
 
-		
-		if (rance_pos.thing_posx - shinobi_pos.thing_posx < 600.0f && rance_pos.thing_posx - shinobi_pos.thing_posx > 0.0f)
+		if (rance_pos.thing_posx - shinobi_pos.thing_posx < 600.0f && rance_pos.thing_posx - shinobi_pos.thing_posx > 1.0f)
 		{
-			rance.enemy_is_right = true;
-			thing[RANCE_LEFT].vecPosition.x -= 0.05;
+			rance_state.enemy_is_right = true;
+			thing[RANCE_LEFT].vecPosition.x -= 0.07;
 		}
-		if (shinobi_pos.thing_posx - rance_pos.thing_posx < 600.0f && shinobi_pos.thing_posx - rance_pos.thing_posx > 0.0f)
+		if (shinobi_pos.thing_posx - rance_pos.thing_posx < 600.0f && shinobi_pos.thing_posx - rance_pos.thing_posx > 10.0f)
 		{
-			rance.enemy_is_right = false;
-			thing[RANCE_LEFT].vecPosition.x += 0.05;
+			rance_state.enemy_is_right = false;
+			thing[RANCE_LEFT].vecPosition.x += 0.07;
 		}
 
 		//if (shinobi_pos.thing_posx < rance_pos.thing_posx)
@@ -953,18 +930,20 @@ void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture,pTHING pThing)
 		//{
 		//}
 
-		Tex_Draw(pTexture, collision_cannon, WHITE_TEX);
+		//Tex_Draw(pTexture, collision_cannon, WHITE_TEX);
 		
-		
-		if (rance.enemy_is_right == true)
+		if (rance_state.remain == true)
 		{
-			Transform_Draw_Thing(&pThing[RANCE_LEFT], 1.0f, &rance_pos);
+			if (rance_state.enemy_is_right == true)
+			{
+				Transform_Draw_Thing(&pThing[RANCE_LEFT], 1.0f, &rance_pos);
+			}
+			else
+			{
+				Transform_Draw_Thing(&pThing[RANCE_RIGHT], 1.0f, &rance_pos);
+			}
 		}
-		else
-		{
-			Transform_Draw_Thing(&pThing[RANCE_RIGHT], 1.0f, &rance_pos);
-		}
-		Transform_Draw_Thing(&pThing[BOSS_THING], 1.0f, &boss_pos);
+		//Transform_Draw_Thing(&pThing[BOSS_THING], 1.0f, &boss_pos);
 
 		//Transform_Draw_Thing(&pThing[CANNON_THING], 0.1f,&cannon_pos);
 
@@ -975,6 +954,28 @@ void Game_Scene_Render(LPDIRECT3DTEXTURE9 *pTexture,pTHING pThing)
 		else
 		{
 			Transform_Draw_Thing(&pThing[LEFT_DASH_THING], 1.0f, &shinobi_pos);
+		}
+
+		collision_enemy_rance[0].x = rance_pos.thing_posx - 70.0f;
+		collision_enemy_rance[0].y = rance_pos.thing_posy - 200.0f;
+		collision_enemy_rance[1].x = rance_pos.thing_posx + 100.0f;
+		collision_enemy_rance[1].y = rance_pos.thing_posy - 200.0f;
+		collision_enemy_rance[2].x = rance_pos.thing_posx + 100.0f;
+		collision_enemy_rance[2].y = rance_pos.thing_posy + 30.0f;
+		collision_enemy_rance[3].x = rance_pos.thing_posx - 70.0f;
+		collision_enemy_rance[3].y = rance_pos.thing_posy + 30.0f;
+
+		if (init_flag == false)
+		{
+			init_flag = true;
+		}
+
+
+		game_score_time++;
+		if (game_score_time == 60)
+		{
+			Second++;
+			game_score_time = 0;
 		}
 		EndScene();
 		break;

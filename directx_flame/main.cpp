@@ -20,8 +20,6 @@
 #define gravity 5.0
 #define JUMP_POWER 60.0f
 
-
-
 /**
 *@mainpage
 *SHINOBIgame
@@ -44,9 +42,6 @@ VOID FreeDx();
 //ïœêîêÈåæ
 KEYSTATE Key[KEYMAX];
 int current_scene;
-FLOAT eye_x = 0.0f;
-FLOAT eye_y = 0.0f;
-FLOAT eye_z = -1.0f;
 
 bool game_over_flag = false;
 
@@ -121,11 +116,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	csv_file_load("stage_info.csv");
 	Tex_Load_EX(pTexture, "makimoo.png", MAKI_LEFT_TEX, 255, 255, 255, 255);
 	Tex_Load_EX(pTexture, "makikami.png", MAKI_MID_TEX, 255, 255, 255, 255);
-	Tex_Load_EX(pTexture, "maki3.png", MAKI_RIGHT_TEX, 255, 255, 255, 255);
 	Tex_Load_EX(pTexture, "fire_5.png", FIRE_EFFECT_TEX, 255, 0, 0, 0);
 	Tex_Load_EX(pTexture, "ninja.jpg", PLAYER_DASH_TEX, 255, 255, 255, 255);
 	Tex_Load_EX(pTexture, "attack.png", PLAYER_ATTACK_TEX, 255, 0, 0, 0);
 	Tex_Load_EX(pTexture, "siyyurikenn_y.png", SHURIKEN_TEX, 255, 255, 255, 255);
+	Tex_Load_EX(pTexture, "result.png", MAKI_MID_R_TEX, 255, 255, 255, 255);
+	Tex_Load_EX(pTexture, "maki3.png",   MAKI_RIGHT_TEX, 255, 255, 255, 255);
+	Tex_Load_EX(pTexture, "maki3.png", MAKI_RIGHT_R_TEX, 255, 255, 255, 255);
+	Tex_Load_EX(pTexture, "09.png", MOJI_TEX, 255, 255, 255, 255);
+	Tex_Load_EX(pTexture, "ï™ïb.png", SECOND_MINUTE_TEX, 255, 255, 255, 255);
+	Tex_Load_EX(pTexture, "1.png", END_BACK_TEX_0, 255, 0, 0, 0);
+	Tex_Load_EX(pTexture, "2.png", END_BACK_TEX_1, 255, 0, 0, 0);
+	Tex_Load_EX(pTexture, "3.png", END_BACK_TEX_2, 255, 0, 0, 0);
+	Tex_Load_EX(pTexture, "4.png", END_BACK_TEX_3, 255, 0, 0, 0);
+	Tex_Load_EX(pTexture, "5.png", END_LOGO_TEX, 255, 0, 0, 0);
+	Tex_Load_EX(pTexture, "6.png", END_BACK_TEX_4, 255, 0, 0, 0);
+	Tex_Load_EX(pTexture, "makimoo.png", MAKI_LEFT_R_TEX, 255, 255, 255, 255);
+
 
 	Tex_Load(pTexture, "white.png", WHITE_TEX);
 	Tex_Load(pTexture, "titlerogo2_cg3.jpg", TITLE_TEX);
@@ -147,6 +154,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	Mesh_Load_FromX("rance_left.x", &thing[RANCE_LEFT], &D3DXVECTOR3(8.0f, -3.0f, 9.0f));
 	Mesh_Load_FromX("boss.x", &thing[BOSS_THING], &D3DXVECTOR3(5.0f, -3.0f, 9.0f));
 
+	_Sound_input("test.wav", hWnd, TITLE_SOUND);
+	_Sound_input("katana02.wav", hWnd, SELECT_SOUND);
+	_Sound_input("Boss.wav", hWnd, RESULT_SOUND);
 
 	Init_func();
 	RenderSet();
@@ -223,9 +233,19 @@ void Control()
 		Game_Scene_Control(thing);
 		break;
 
+	case RESULT_SCENE:
+		RESULT_Control();
+
+		break;
+
 	case GAMEOVER_SCENE:
+		KeyCheck_Dinput(&Key[SPACE], DIK_SPACE);
 
-
+		if (Key[SPACE] == PUSH)
+		{
+			current_scene = TITLE_SCENE;
+		}
+		Score_Scene_Control();
 		break;
 
 	}
@@ -241,7 +261,6 @@ void Render()
 {
 	if (!pD3Device) return;
 	
-	Set_View_Light(eye_x,eye_y,eye_z);
 
 	//âÊñ ÇÃè¡ãéÇ∆ï`âÊÇÃäJén
 	switch (current_scene)
@@ -255,12 +274,18 @@ void Render()
 			break;
 
 		case GAME_SCENE:
+	
 			Game_Scene_Render(pTexture , thing);
 			break;
-			
+
+		case RESULT_SCENE:
+			RESULT();
+			break;
+
 		case GAMEOVER_SCENE:
 			BeginScene();
 
+			Score_Scene_Render();
 
 			EndScene();
 

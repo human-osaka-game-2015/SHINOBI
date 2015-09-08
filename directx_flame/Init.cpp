@@ -6,8 +6,8 @@ extern CUSTOMVERTEX enemy[4];
 extern CUSTOMVERTEX enemy_tmp[4];
 extern CUSTOMVERTEX collision_box[4];
 extern CUSTOMVERTEX collision_box_tmp[4];
-extern CUSTOMVERTEX collision_cannon[4];
-extern CUSTOMVERTEX collision_cannon_tmp[4];
+extern CUSTOMVERTEX collision_enemy_rance[4];
+extern CUSTOMVERTEX collision_enemy_rance_tmp[4];
 extern CUSTOMVERTEX back_ground[4];
 extern CUSTOMVERTEX back_ground_tmp[4];
 
@@ -24,7 +24,7 @@ void Init_func()
 		player[count] = player_tmp[count];
 		enemy[count] = enemy_tmp[count];
 		collision_box[count] = collision_box_tmp[count];
-		collision_cannon[count] = collision_cannon_tmp[count];
+		collision_enemy_rance[count] = collision_enemy_rance_tmp[count];
 		back_ground[count] = back_ground_tmp[count];
 		ground[count] = Init_ground[count];
 		back_ground_wall[count] = Init_back_ground_wall[count];

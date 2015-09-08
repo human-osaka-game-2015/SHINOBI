@@ -90,9 +90,9 @@ void Tex_Draw(LPDIRECT3DTEXTURE9 *pTexture, CUSTOMVERTEX* VertexName, int TexID)
 }
 
 
-HRESULT Tex_Load_EX(LPDIRECT3DTEXTURE9 *pTexture,const char* text, int TexID, int alpha, int red, int green, int blue)
+HRESULT Tex_Load_EX(LPDIRECT3DTEXTURE9 *pTexture, const char* text, int TexID, int alpha, int red, int green, int blue)
 {
-	return D3DXCreateTextureFromFileEx(
+	if (FAILED(D3DXCreateTextureFromFileEx(
 		pD3Device,
 		TEXT(text),
 		D3DX_DEFAULT_NONPOW2,
@@ -105,7 +105,12 @@ HRESULT Tex_Load_EX(LPDIRECT3DTEXTURE9 *pTexture,const char* text, int TexID, in
 		D3DX_FILTER_NONE,
 		D3DCOLOR_ARGB(alpha, red, green, blue),
 		NULL, NULL,
-		&pTexture[TexID]);
+		&pTexture[TexID])))
+	{
+		return 1;
+	}
+	return 0;
+
 }
 
 void Mesh_Load_FromX(LPTSTR xfilename, pTHING pThing, D3DXVECTOR3* pvecPosition)

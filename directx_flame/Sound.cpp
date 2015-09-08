@@ -73,7 +73,7 @@ bool openWave(TCHAR *filepath, WAVEFORMATEX &waveFormatEx, char** ppData, DWORD 
 //	return DefWindowProc(hWnd, mes, wParam, lParam);
 //}
 
-int _Sound_input(char* name, HWND hWnd, SOUND s_name,bool* index)
+int _Sound_input(char* name, HWND hWnd, SOUND s_name)
 {
 	/*MSG msg; HWND hWnd;
 	WNDCLASSEX wcex = { sizeof(WNDCLASSEX), CS_HREDRAW | CS_VREDRAW, Wnd_Proc, 0, 0, hInstance, NULL, NULL,
@@ -122,31 +122,6 @@ int _Sound_input(char* name, HWND hWnd, SOUND s_name,bool* index)
 		pDSBuffer[s_name]->Unlock(lpvWrite, dwLength, NULL, 0);
 	}
 	delete[] pWaveData; // 元音はもういらない
-
-	/*ShowWindow(hWnd, nCmdShow);*/
-
-	
-
-	// 再生
-/*	if (sound_control == 0)
-	{
-		pDSBuffer[0]->Play(0, 0, DSBPLAY_LOOPING);
-	}*/
-	//else
-
-	
-	
-
-	// メッセージ ループ
-/*	do {
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-			DispatchMessage(&msg);
-		}
-	} while (msg.message != WM_QUIT);
-	*/
-
-	*index = 1;
-
 	return 0;
 }
 
